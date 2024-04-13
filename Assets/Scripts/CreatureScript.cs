@@ -1,7 +1,6 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UIElements;
+using Random = UnityEngine.Random;
 
 public class CreatureScript : MonoBehaviour
 {
@@ -21,6 +20,7 @@ public class CreatureScript : MonoBehaviour
 
     [Header("Legs")]
 
+    [SerializeField] private GameObject legPrefab;
     [SerializeField] private int legAmount;
 
     [Header("Debugging")]
@@ -30,7 +30,6 @@ public class CreatureScript : MonoBehaviour
     private Vector3 nextPosition;
     private Vector3 smoothVelocity;
     private Coroutine stepUpdater;
-    private List<Leg> legs = new List<Leg>();
 
     private void Awake()
     {
@@ -72,15 +71,5 @@ public class CreatureScript : MonoBehaviour
 
         Gizmos.color = Color.yellow;
         Gizmos.DrawSphere(nextPosition, 0.25f);
-    }
-
-    public class Leg
-    {
-        public Vector3 position;
-
-        public Leg()
-        {
-            position = Vector3.zero;
-        }
     }
 }
