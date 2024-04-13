@@ -9,6 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5175651455898398456}
+  - component: {fileID: 6025415580094257309}
   m_Layer: 0
   m_Name: Creature
   m_TagString: Untagged
@@ -32,6 +33,26 @@ Transform:
   - {fileID: 7355402841963397953}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6025415580094257309
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3377426433073949596}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d44be20f38372044ea97e64d05653cb6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  target: {fileID: 0}
+  speed: 0.15
+  stepDistance: 1
+  stepUpdateFrequency: 0.25
+  stepFrequencyRange: 1
+  stepDistanceRange: 0.25
+  deviationRange: 90
+  enableDebug: 1
 --- !u!1 &8737984153049788979
 GameObject:
   m_ObjectHideFlags: 0
