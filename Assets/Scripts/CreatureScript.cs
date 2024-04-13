@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -12,12 +13,15 @@ public class CreatureScript : MonoBehaviour
     [SerializeField, Min(0)] private float stepDistance = 0.5f;
     [SerializeField, Min(0)] private float stepUpdateFrequency = 1f;
     
-
     [Header("Randomness Settings")]
 
     [SerializeField, Min(0)] private float stepFrequencyRange = 1f;
     [SerializeField, Min(0)] private float stepDistanceRange = 1f;
     [SerializeField, Min(0)] private float deviationRange = 1f;
+
+    [Header("Legs")]
+
+    [SerializeField] private int legAmount;
 
     [Header("Debugging")]
 
@@ -26,6 +30,7 @@ public class CreatureScript : MonoBehaviour
     private Vector3 nextPosition;
     private Vector3 smoothVelocity;
     private Coroutine stepUpdater;
+    private List<Leg> legs = new List<Leg>();
 
     private void Awake()
     {
@@ -67,5 +72,15 @@ public class CreatureScript : MonoBehaviour
 
         Gizmos.color = Color.yellow;
         Gizmos.DrawSphere(nextPosition, 0.25f);
+    }
+
+    public class Leg
+    {
+        public Vector3 position;
+
+        public Leg()
+        {
+            position = Vector3.zero;
+        }
     }
 }
