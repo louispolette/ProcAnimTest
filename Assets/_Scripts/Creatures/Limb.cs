@@ -1,15 +1,19 @@
-using System.Collections;
-using System.Collections.Generic;
+using System;
 using UnityEngine;
 
+[Serializable]
 public class Limb
 {
-    public Bone[] bones;
+    public Bone startBone;
     public Bone endBone;
+    public Bone[] bones;
+    public LineRenderer renderer;
 
     public Limb(Bone[] bones)
     {
         this.bones = bones;
-        endBone = null;
+        startBone = bones[0];
+        endBone = bones[bones.Length - 1];
+        renderer = null;
     }
 }

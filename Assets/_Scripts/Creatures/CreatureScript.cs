@@ -9,6 +9,10 @@ public class CreatureScript : MonoBehaviour
 
     [Header("Movement Parameters")]
 
+    [SerializeField] private bool enableMovement = true;
+
+    [Space]
+
     [SerializeField, Min(0)] private float speed = 1.0f;
     [SerializeField, Min(0)] private float stepDistance = 0.5f;
     [SerializeField, Min(0)] private float stepUpdateFrequency = 1f;
@@ -21,7 +25,7 @@ public class CreatureScript : MonoBehaviour
 
     [Header("Legs")]
 
-    [SerializeField] private Bone rootBone;
+    public Bone legRoot;
     [SerializeField] private GameObject legPrefab;
     [SerializeField] private int legAmount;
 
@@ -29,14 +33,20 @@ public class CreatureScript : MonoBehaviour
 
     [SerializeField] private bool enableDebug = false;
 
+    public List<Limb> _limbs { get; private set; } = new List<Limb>();
+
     private Vector3 _nextPosition;
     private Vector3 _smoothVelocity;
     private Coroutine _stepUpdater;
-    private Limb[] _limbs;
 
     private void Awake()
     {
-        _stepUpdater = StartCoroutine(UpdateNextPosition());
+        if (enableMovement)
+        {
+            _stepUpdater = StartCoroutine(UpdateNextPosition());
+        }
+
+        CreateLimbs();
     }
 
     private void Update()
@@ -44,17 +54,35 @@ public class CreatureScript : MonoBehaviour
         transform.position = Vector3.SmoothDamp(transform.position, _nextPosition, ref _smoothVelocity, speed);
     }
 
+    #region rig building
+
     /// <summary>
     /// Sets up the limbs of the creature
     /// </summary>
     private void CreateLimbs()
     {
-        Bone[] limbRoots = GetDirectChildBones(rootBone);
+        Bone[] limbRoots = GetDirectChildBones(legRoot);
 
-        for (int i = 0; i < legAmount; i++)
+        foreach (Bone limbStart in limbRoots)
         {
-            _limbs[i] = new Limb()
+            _limbs.Add(BuildLimb(limbStart));
         }
+    }
+
+    /// <summary>
+    /// Builds a limb from every children of the selected bone
+    /// </summary>
+    /// <param name="limbStart">First bone of the limb that isn't the root bone</param>
+    /// <returns></returns>
+    private Limb BuildLimb(Bone limbStart)
+    {
+        List<Bone> limbBones = new();
+
+        limbBones.Add(limbStart);
+
+        GetAllChildBones(limbStart.transform, limbBones);
+
+        return new Limb(limbBones.ToArray());
     }
 
     /// <summary>
@@ -64,28 +92,30 @@ public class CreatureScript : MonoBehaviour
     /// <returns></returns>
     private Bone[] GetDirectChildBones(Bone bone)
     {
-        if (bone.transform.childCount == 0) // If the bone is an end bone
-        {
-            bone.isEndBone = true;
-            return null;
-        }
-
         List<Bone> childBones = new();
 
-        for (int i = 0; i < bone.transform.childCount; ++i)
-        {
-            Bone child = transform.GetChild(i).GetComponent<Bone>();
+        bool hasChildBone = false;
 
-            if (child != null)
+        foreach (Transform child in bone.transform)
+        {
+            if (child.TryGetComponent(out Bone childBone))
             {
-                childBones.Add(child);
+                hasChildBone = true;
+                childBones.Add(childBone);
             }
         }
+
+        bone.isEndBone = !hasChildBone;
 
         return childBones.ToArray();
     }
 
-    private void AddChildBones(Transform parent, List<Bone> list)
+    /// <summary>
+    /// Recursively gets all child bones of the given parent and puts them into the given list
+    /// </summary>
+    /// <param name="parent">Transform from which to get get bones</param>
+    /// <param name="list">List that holds the child bones</param>
+    private void GetAllChildBones(Transform parent, List<Bone> list)
     {
         if (parent.transform.childCount == 0)
         {
@@ -98,27 +128,15 @@ public class CreatureScript : MonoBehaviour
 
         foreach (Transform child in parent.transform)
         {
-            if (child.TryGetComponent(out Bone bone))
+            if (child.TryGetComponent(out Bone childBone))
             {
-                list.Add(bone);
-                AddChildBones(child, list);
+                list.Add(childBone);
+                GetAllChildBones(child, list);
             }
         }
     }
 
-    /// <summary>
-    /// Builds a limb with every children of the selected bone
-    /// </summary>
-    /// <param name=""></param>
-    /// <returns></returns>
-    private Limb BuildLimb(Bone rootBone)
-    {
-        List<Bone> limbBones = new();
-
-        AddChildBones(rootBone.transform, limbBones);
-
-        return new Limb(limbBones.ToArray());
-    }
+    #endregion
 
     private Vector3 GetNextPosition()
     {
