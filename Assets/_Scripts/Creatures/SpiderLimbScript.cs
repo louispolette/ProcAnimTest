@@ -1,57 +1,27 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using Random = UnityEngine.Random;
+using UnityEngine.Rendering;
+using UnityEngine.U2D.IK;
 
-public class CreatureScript : MonoBehaviour
+public class SpiderLimbScript : MonoBehaviour
 {
-    [SerializeField] private Transform target;
-
-    [Header("Movement Parameters")]
-
-    [SerializeField] private bool enableMovement = true;
-
-    [Space]
-
-    [SerializeField, Min(0)] private float speed = 1.0f;
-    [SerializeField, Min(0)] private float stepDistance = 0.5f;
-    [SerializeField, Min(0)] private float stepUpdateFrequency = 1f;
-    
-    [Header("Randomness Settings")]
-
-    [SerializeField, Min(0)] private float stepFrequencyRange = 1f;
-    [SerializeField, Min(0)] private float stepDistanceRange = 1f;
-    [SerializeField, Min(0)] private float deviationRange = 1f;
-
     [Header("Legs")]
 
     public Bone legRoot;
-    [SerializeField] private GameObject legPrefab;
     [SerializeField] private int legAmount;
-
-    [Header("Debugging")]
-
-    [SerializeField] private bool enableDebug = false;
-
     public List<Limb> _limbs { get; private set; } = new List<Limb>();
 
-    private Vector3 _nextPosition;
-    private Vector3 _smoothVelocity;
-    private Coroutine _stepUpdater;
+    private List<Vector3> _idealLegPositions = new List<Vector3>();
+
+    [Header("Debug")]
+
+    [SerializeField] private bool _enableDebug = false;
 
     private void Awake()
     {
-        if (enableMovement)
-        {
-            _stepUpdater = StartCoroutine(UpdateNextPosition());
-        }
-
         CreateLimbs();
-    }
-
-    private void Update()
-    {
-        transform.position = Vector3.SmoothDamp(transform.position, _nextPosition, ref _smoothVelocity, speed);
+        GetIdealLegPositions();
     }
 
     #region rig building
@@ -72,7 +42,7 @@ public class CreatureScript : MonoBehaviour
     /// <summary>
     /// Builds a limb from every children of the selected bone
     /// </summary>
-    /// <param name="limbStart">First bone of the limb that isn't the root bone</param>
+    /// <param name="limbStart">First bone of the limb</param>
     /// <returns></returns>
     private Limb BuildLimb(Bone limbStart)
     {
@@ -138,35 +108,23 @@ public class CreatureScript : MonoBehaviour
 
     #endregion
 
-    private Vector3 GetNextPosition()
+    private void GetIdealLegPositions()
     {
-        Vector3 direction = (target.position - transform.position).normalized;
-        Vector3 deviatedDir = Quaternion.AngleAxis(Random.Range(-deviationRange / 2, deviationRange / 2), Vector3.forward) * direction;
-
-        float randomMaxDist = Random.Range(Mathf.Max(0, stepDistance - stepDistanceRange), stepDistance + stepDistanceRange);
-        float distance = Mathf.Min(Vector2.Distance(transform.position, target.position), randomMaxDist);
-
-        Vector3 position = deviatedDir * distance;
-
-        return transform.position + position;
-    }
-
-    private IEnumerator UpdateNextPosition()
-    {
-        while (true)
+        foreach (Limb limb in _limbs)
         {
-            _nextPosition = GetNextPosition();
-
-            yield return new WaitForSeconds(Random.Range(stepUpdateFrequency - stepFrequencyRange / 2,
-                                                         stepUpdateFrequency + stepFrequencyRange / 2));
+            _idealLegPositions.Add(limb.offsetFromRoot * 0.5f);
         }
     }
 
     private void OnDrawGizmos()
     {
-        if (!enableDebug) return;
+        if (!_enableDebug) return;
 
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawSphere(_nextPosition, 0.25f);
+        Gizmos.color = Color.red;
+
+        foreach (Vector3 position in _idealLegPositions)
+        {
+            Gizmos.DrawSphere(legRoot.transform.position + position, 0.5f);
+        }
     }
 }

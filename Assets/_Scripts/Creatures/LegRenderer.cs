@@ -5,7 +5,7 @@ using UnityEngine.U2D.IK;
 
 public class LegRenderer : MonoBehaviour
 {
-    private CreatureScript _creatureScript;
+    private SpiderLimbScript _limbScript;
 
     private LineRenderer[] _lineRenderers;
 
@@ -17,13 +17,13 @@ public class LegRenderer : MonoBehaviour
 
     private void Awake()
     {
-        _creatureScript = GetComponent<CreatureScript>();
+        _limbScript = GetComponent<SpiderLimbScript>();
     }
 
     private void Start()
     {
-        _rootBone = _creatureScript.legRoot;
-        _limbs = _creatureScript._limbs;
+        _rootBone = _limbScript.legRoot;
+        _limbs = _limbScript._limbs;
         _lineRenderers = GetLineRenderers();
     }
 
