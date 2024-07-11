@@ -13,6 +13,8 @@ public class SpiderLimbScript : MonoBehaviour
 
     [SerializeField] private int legAmount;
 
+    [SerializeField] private float legLength;
+
     [Tooltip("How much should the spider's base position extend its legs, 1 is fully extended")]
     [SerializeField, Range(0f, 1f)] private float legBaseDistance = 0.75f;
 
@@ -38,28 +40,70 @@ public class SpiderLimbScript : MonoBehaviour
 
     private IKManager2D _IKManager;
 
+    private Bone[] bones;
+
     #endregion
 
     private void Awake()
     {
         _IKManager = GetComponentInChildren<IKManager2D>();
 
-        CreateLimbs();
+        LimbSetup();
         GetIdealLegPositions();
+        CacheBones();
     }
 
-    #region rig building
+    #region setup
 
     /// <summary>
     /// Sets up the limbs of the creature
     /// </summary>
-    private void CreateLimbs()
+    private void LimbSetup()
     {
         Bone[] limbRoots = GetDirectChildBones(limbBase);
 
         foreach (Bone limbStart in limbRoots)
         {
             _limbs.Add(BuildLimb(limbStart));
+        }
+    }
+
+    /// <summary>
+    /// Creates the creature's bones
+    /// </summary>
+    private void CreateBones()
+    {
+        Vector2 legDirection = (legAmount % 2 == 0) ? Vector2.right : Vector2.up;
+
+        for (int i = 0; i < legAmount; i++)
+        {
+            Transform boneToAttachTo = limbBase.transform;
+
+            for (int j = 0; j < 3; j++)
+            {
+                string boneName = "Undefined Bone";
+
+                switch (j)
+                {
+                    case 0:
+                        boneName = "Hip";
+                        break;
+                    case 1:
+                        boneName = "Knee";
+                        break;
+                    case 2:
+                        boneName = "Foot";
+                        break;
+                }
+
+                GameObject newBone = new GameObject($"{boneName} {j + 1}", typeof(Bone));
+                newBone.transform.position = limbBase.transform.position + (Vector3)legDirection * (legLength / 2) * j;
+                newBone.transform.SetParent(boneToAttachTo, true);
+
+                boneToAttachTo = newBone.transform;
+            }
+
+            legDirection = Quaternion.AngleAxis(360 / legAmount, Vector3.forward) * legDirection;
         }
     }
 
@@ -159,6 +203,11 @@ public class SpiderLimbScript : MonoBehaviour
         }
     }
 
+    private void CacheBones()
+    {
+        Bone[] bones = limbBase.GetComponentsInChildren<Bone>();
+    }
+
     #endregion
 
     private void GetIdealLegPositions()
@@ -173,11 +222,18 @@ public class SpiderLimbScript : MonoBehaviour
     {
         if (!_enableDebug) return;
 
-        Gizmos.color = Color.red;
+        Gizmos.color = Color.yellow;
 
         foreach (Vector3 position in _idealLegPositions)
         {
             Gizmos.DrawSphere(limbBase.transform.position + position, 0.5f);
+        }
+
+        Gizmos.color = Color.blue;
+
+        foreach (Bone b in bones)
+        {
+            Gizmos.DrawSphere(b.transform.position, 0.5f);
         }
     }
 }
