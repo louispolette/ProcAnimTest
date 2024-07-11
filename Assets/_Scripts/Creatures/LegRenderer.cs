@@ -1,43 +1,41 @@
+using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using UnityEngine;
-using UnityEngine.U2D.IK;
 
 public class LegRenderer : MonoBehaviour
 {
     private SpiderLimbScript _limbScript;
 
-    private LineRenderer[] _lineRenderers;
-
-    private Bone _rootBone;
-
-    [SerializeField] public List<Limb> _limbs;
+    private List<Limb> _limbs;
 
     private List<Vector3> bonePositions = new List<Vector3>();
+
+    [Serializable]
+    public class RendererProperties
+    {
+        public Gradient color;
+        public int cornerVertices;
+        public int endCapVertices;
+    }
 
     private void Awake()
     {
         _limbScript = GetComponent<SpiderLimbScript>();
     }
 
-    private void Start()
+    private void OnEnable()
     {
-        _rootBone = _limbScript.limbBase;
-        _limbs = _limbScript._limbs;
-        _lineRenderers = GetLineRenderers();
+        _limbScript.onLimbsSetupDone += Init;
     }
 
-    private LineRenderer[] GetLineRenderers()
+    private void OnDisable()
     {
-        List<LineRenderer> renderers = new List<LineRenderer>();
+        _limbScript.onLimbsSetupDone -= Init;
+    }
 
-        foreach (Limb limb in _limbs)
-        {
-            limb.renderer = limb.startBone.GetComponent<LineRenderer>();
-            renderers.Add(limb.renderer);
-        }
-
-        return renderers.ToArray();
+    private void Init()
+    {
+        _limbs = _limbScript._limbs;
     }
 
     private void Update()
@@ -45,8 +43,6 @@ public class LegRenderer : MonoBehaviour
         foreach (Limb limb in _limbs)
         {
             bonePositions.Clear();
-
-            bonePositions.Add(_rootBone.transform.position);
 
             foreach (Bone bone in limb.bones)
             {
