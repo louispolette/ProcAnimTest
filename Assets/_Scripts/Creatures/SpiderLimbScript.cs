@@ -1,25 +1,49 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Rendering;
 using UnityEngine.U2D.IK;
 
 public class SpiderLimbScript : MonoBehaviour
 {
+    #region serialized
+
     [Header("Legs")]
 
-    public Bone legRoot;
-    [SerializeField] private int legAmount;
-    public List<Limb> _limbs { get; private set; } = new List<Limb>();
+    [Tooltip("Shared parent of all limbs")]
+    public Bone limbBase;
 
-    private List<Vector3> _idealLegPositions = new List<Vector3>();
+    [SerializeField] private int legAmount;
+
+    [Tooltip("How much should the spider's base position extend its legs, 1 is fully extended")]
+    [SerializeField, Range(0f, 1f)] private float legBaseDistance = 0.75f;
+
+    [Space]
+
+    [Tooltip("Parent that will contain all IK Solvers")]
+    [SerializeField] Transform solversParent;
+
+    [Tooltip("Parent that will contain all IK Targets")]
+    [SerializeField] Transform targetsParent;
 
     [Header("Debug")]
 
     [SerializeField] private bool _enableDebug = false;
 
+    #endregion
+
+    #region not serialized
+
+    public List<Limb> _limbs { get; private set; } = new List<Limb>();
+
+    private List<Vector3> _idealLegPositions = new List<Vector3>();
+
+    private IKManager2D _IKManager;
+
+    #endregion
+
     private void Awake()
     {
+        _IKManager = GetComponentInChildren<IKManager2D>();
+
         CreateLimbs();
         GetIdealLegPositions();
     }
@@ -31,7 +55,7 @@ public class SpiderLimbScript : MonoBehaviour
     /// </summary>
     private void CreateLimbs()
     {
-        Bone[] limbRoots = GetDirectChildBones(legRoot);
+        Bone[] limbRoots = GetDirectChildBones(limbBase);
 
         foreach (Bone limbStart in limbRoots)
         {
@@ -52,7 +76,36 @@ public class SpiderLimbScript : MonoBehaviour
 
         GetAllChildBones(limbStart.transform, limbBones);
 
-        return new Limb(limbBones.ToArray());
+        Limb newLimb = new Limb(limbBones.ToArray());
+
+        CreateSolver(newLimb);
+
+        return newLimb;
+    }
+
+    /// <summary>
+    /// Creates the given limb's IK Solver and its associated target
+    /// </summary>
+    /// <param name="limb"></param>
+    private void CreateSolver(Limb limb)
+    {
+        GameObject newSolver = new GameObject("Solver Test");
+        newSolver.transform.parent = solversParent;
+        limb.solver = newSolver.AddComponent<LimbSolver2D>();
+
+        IKChain2D chain = limb.solver.GetChain(0);
+
+        GameObject newTarget = new GameObject("Target Test");
+        newTarget.transform.position = limb.endBone.transform.position;
+        newTarget.transform.SetParent(targetsParent, true);
+        chain.target = newTarget.transform;
+
+        chain.effector = limb.endBone.transform;
+
+        _IKManager.AddSolver(limb.solver);
+
+        //limb.solver.Initialize();
+        //limb.solver.UpdateIK(1f);
     }
 
     /// <summary>
@@ -112,7 +165,7 @@ public class SpiderLimbScript : MonoBehaviour
     {
         foreach (Limb limb in _limbs)
         {
-            _idealLegPositions.Add(limb.offsetFromRoot * 0.5f);
+            _idealLegPositions.Add(limb.offsetFromRoot * legBaseDistance);
         }
     }
 
@@ -124,7 +177,7 @@ public class SpiderLimbScript : MonoBehaviour
 
         foreach (Vector3 position in _idealLegPositions)
         {
-            Gizmos.DrawSphere(legRoot.transform.position + position, 0.5f);
+            Gizmos.DrawSphere(limbBase.transform.position + position, 0.5f);
         }
     }
 }

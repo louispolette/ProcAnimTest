@@ -20,6 +20,8 @@ public class Limb
         endBone = bones[bones.Length - 1];
         renderer = null;
         offsetFromRoot = endBone.transform.position - startBone.transform.position;
+        solver = null;
+        IKTarget = null;
     }
 
     public float GetLimbLength()

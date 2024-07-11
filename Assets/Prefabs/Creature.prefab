@@ -436,8 +436,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5d787e55d1d059642bd0eea3bcfb2195, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  legRoot: {fileID: 7090699460722082573}
+  limbBase: {fileID: 7090699460722082573}
   legAmount: 0
+  legBaseDistance: 0.75
+  solversParent: {fileID: 0}
+  targetsParent: {fileID: 0}
+  _enableDebug: 0
 --- !u!114 &3766422308475223437
 MonoBehaviour:
   m_ObjectHideFlags: 0

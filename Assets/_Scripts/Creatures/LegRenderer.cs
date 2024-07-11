@@ -22,7 +22,7 @@ public class LegRenderer : MonoBehaviour
 
     private void Start()
     {
-        _rootBone = _limbScript.legRoot;
+        _rootBone = _limbScript.limbBase;
         _limbs = _limbScript._limbs;
         _lineRenderers = GetLineRenderers();
     }
