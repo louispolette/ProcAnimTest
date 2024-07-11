@@ -31,14 +31,6 @@ public class SpiderMovement : MonoBehaviour
     private Vector3 _smoothVelocity;
     private Coroutine _stepUpdater;
 
-    private void Awake()
-    {
-        if (enableMovement)
-        {
-            _stepUpdater = StartCoroutine(UpdateNextPosition());
-        }
-    }
-
     private void Update()
     {
         transform.position = Vector3.SmoothDamp(transform.position, _nextPosition, ref _smoothVelocity, speed);
