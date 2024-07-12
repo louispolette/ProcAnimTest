@@ -18,7 +18,7 @@ public class Limb
     public float length;
     public Vector2 targetPosition;
     public Vector2 lerpPosition;
-    public bool isOnGround;
+    public bool hasAvailableGround;
     public Coroutine stepCoroutine;
     public bool isStepping;
 
@@ -36,7 +36,7 @@ public class Limb
         length = GetLimbLength();
         targetPosition = endBone.transform.position;
         lerpPosition = targetPosition;
-        isOnGround = false;
+        hasAvailableGround = false;
         stepCoroutine = null;
         isStepping = false;
     }
@@ -58,11 +58,11 @@ public class Limb
     /// <summary>
     /// Moves the limb's lerp position to its target position
     /// </summary>
-    /// <param name="isPositionGrounded">Wether the position to move to is grounded or not</param>
-    public void MoveLerpPosition(bool isPositionGrounded)
+    /// <param name="foundGroundedPosition">Wether the position to move to is grounded or not</param>
+    public void MoveLerpPosition(bool foundGroundedPosition)
     {
         lerpPosition = targetPosition;
-        isOnGround = isPositionGrounded;
+        hasAvailableGround = foundGroundedPosition;
     }
 
     public IEnumerator Step(float stepDuration)
@@ -76,7 +76,6 @@ public class Limb
         while (elapsedTime < stepDuration)
         {
             elapsedTime = Time.time - startTime;
-
             IKTarget.transform.position = Vector2.Lerp(initialPosition, lerpPosition, elapsedTime / stepDuration);
 
             yield return null;
