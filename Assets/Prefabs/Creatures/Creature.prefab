@@ -9,7 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5139737147527586932}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: IK Targets
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -43,7 +43,7 @@ GameObject:
   - component: {fileID: 1311629424785403395}
   - component: {fileID: 6286530986277928330}
   - component: {fileID: 3766422308475223437}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Creature
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -78,15 +78,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3acbfb5c163225847ae6108db3368d1f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  target: {fileID: 0}
-  enableMovement: 0
-  speed: 1
-  stepDistance: 0.5
-  stepUpdateFrequency: 1
-  stepFrequencyRange: 1
-  stepDistanceRange: 1
-  deviationRange: 1
-  enableDebug: 1
+  _target: {fileID: 0}
+  _speed: 5
+  _stepDistance: 1
+  _stepUpdateFrequency: 0.5
+  _stepFrequencyRange: 0.25
+  _stepDistanceRange: 0.25
+  _deviationRange: 5
+  _enableDebug: 0
 --- !u!114 &6286530986277928330
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -100,9 +99,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   limbBase: {fileID: 7090699460722082573}
-  legAmount: 8
-  legLength: 6
-  legBaseDistance: 0.75
+  legAmount: 10
+  legLength: 8
+  footDefaultDistance: 0.8
+  stepDuration: 0.1
+  legLayerMask:
+    serializedVersion: 2
+    m_Bits: 64
   solversParent: {fileID: 1550352268150661577}
   targetsParent: {fileID: 5139737147527586932}
   lineRendererPrefab: {fileID: 6105322602060755413, guid: 961c341ef387c6f488e495d7522a301e, type: 3}
@@ -110,7 +113,13 @@ MonoBehaviour:
     solveFromDefaultPose: 1
     constrainRotation: 0
     flip: 0
-  _enableDebug: 1
+  _enableDebug: 0
+  _debugSettings:
+    bones: 0
+    raycasts: 0
+    defaultPositions: 0
+    lerpPositions: 0
+    targetPositions: 0
 --- !u!114 &3766422308475223437
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -135,7 +144,7 @@ GameObject:
   - component: {fileID: 7747434857820228572}
   - component: {fileID: 7090699460722082573}
   - component: {fileID: 7956684182739173731}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Body
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -237,7 +246,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5026908615720586164}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Renderers
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -268,7 +277,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1550352268150661577}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: IK Solvers
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -300,7 +309,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7355402841963397953}
   - component: {fileID: 7419374174381960782}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Sprite
   m_TagString: Untagged
   m_Icon: {fileID: 0}

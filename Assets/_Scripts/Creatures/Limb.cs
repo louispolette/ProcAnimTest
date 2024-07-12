@@ -1,7 +1,7 @@
 using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.U2D.IK;
-using UnityEngine.UIElements;
 
 [Serializable]
 public class Limb
@@ -19,6 +19,8 @@ public class Limb
     public Vector2 targetPosition;
     public Vector2 lerpPosition;
     public bool isOnGround;
+    public Coroutine stepCoroutine;
+    public bool isStepping;
 
     public Limb(Bone[] bones)
     {
@@ -35,6 +37,8 @@ public class Limb
         targetPosition = endBone.transform.position;
         lerpPosition = targetPosition;
         isOnGround = false;
+        stepCoroutine = null;
+        isStepping = false;
     }
 
     public float GetLimbLength()
@@ -59,7 +63,25 @@ public class Limb
     {
         lerpPosition = targetPosition;
         isOnGround = isPositionGrounded;
+    }
 
-        Debug.Log("Leg Moving");
+    public IEnumerator Step(float stepDuration)
+    {
+        isStepping = true;
+
+        Vector2 initialPosition = IKTarget.transform.position;
+        float startTime = Time.time;
+        float elapsedTime = 0f;
+
+        while (elapsedTime < stepDuration)
+        {
+            elapsedTime = Time.time - startTime;
+
+            IKTarget.transform.position = Vector2.Lerp(initialPosition, lerpPosition, elapsedTime / stepDuration);
+
+            yield return null;
+        }
+
+        isStepping = false;
     }
 }

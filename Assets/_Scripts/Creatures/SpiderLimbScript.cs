@@ -21,7 +21,7 @@ public class SpiderLimbScript : MonoBehaviour
     [Tooltip("How much should the spider extend its leg when no surface is available, 1 is fully extended")]
     [SerializeField, Range(0f, 1f)] private float footDefaultDistance = 0.75f;
 
-    [SerializeField] private float stepSpeed = 0.1f;
+    [SerializeField] private float stepDuration = 0.1f;
 
     [SerializeField] private LayerMask legLayerMask;
 
@@ -55,6 +55,18 @@ public class SpiderLimbScript : MonoBehaviour
     [Header("Debug")]
 
     [SerializeField] private bool _enableDebug = false;
+
+    [SerializeField] private debugSettings _debugSettings;
+
+    [Serializable]
+    private struct debugSettings
+    {
+        public bool bones;
+        public bool raycasts;
+        public bool defaultPositions;
+        public bool lerpPositions;
+        public bool targetPositions;
+    }
 
     #endregion
 
@@ -99,26 +111,37 @@ public class SpiderLimbScript : MonoBehaviour
                 targetPositionIsGrounded = true;
                 limb.targetPosition = hit.point;
 
-                Debug.Log("Ground Found");
-
-                if (!limb.isOnGround) limb.MoveLerpPosition(true);
+                if (!limb.isOnGround) MoveLimb(limb, true);
             }
             else
             {
                 limb.targetPosition = ray.GetPoint(limb.length * limb.defaultDistance);
             }
 
-            if (_enableDebug) Debug.DrawLine(ray.origin, ray.GetPoint(limb.length), Color.magenta);
+            if (_enableDebug && _debugSettings.raycasts) Debug.DrawLine(ray.origin, ray.GetPoint(limb.length), Color.magenta);
 
             if (Vector2.Distance(limb.startBone.transform.position, limb.lerpPosition) > limb.length)
             {
-                Debug.Log("Leg Too Far");
-
-                limb.MoveLerpPosition(targetPositionIsGrounded);
+                MoveLimb(limb, targetPositionIsGrounded);
             }
-
-            limb.IKTarget.position = Vector2.Lerp(limb.IKTarget.position, limb.lerpPosition, stepSpeed);
+            
+            if (!limb.isStepping)
+            {
+                limb.IKTarget.transform.position = limb.lerpPosition;
+            };
         }
+    }
+
+    private void MoveLimb(Limb limb, bool targetPositionIsGrounded = false)
+    {
+        limb.MoveLerpPosition(targetPositionIsGrounded);
+
+        if (limb.stepCoroutine != null)
+        {
+            StopCoroutine(limb.stepCoroutine);
+        }
+
+        limb.stepCoroutine = StartCoroutine(limb.Step(stepDuration));
     }
 
     #region setup
@@ -303,23 +326,32 @@ public class SpiderLimbScript : MonoBehaviour
 
     #endregion
 
-
-
     private void OnDrawGizmos()
     {
         if (!_enableDebug) return;
 
         foreach (Limb limb in _limbs)
         {
-            Gizmos.color = Color.red;
-            Gizmos.DrawSphere(limb.targetPosition, 0.2f);
-
-            Gizmos.color = Color.yellow;
-            Gizmos.DrawSphere(limb.lerpPosition, 0.1f);
-
-            Gizmos.color = Color.green;
-            Gizmos.DrawSphere((Vector2)limb.startBone.transform.position + limb.direction * limb.length * limb.defaultDistance, 0.25f);
+            if (_debugSettings.targetPositions)
+            {
+                Gizmos.color = Color.red;
+                Gizmos.DrawSphere(limb.targetPosition, 0.2f);
+            }
+            
+            if (_debugSettings.lerpPositions)
+            {
+                Gizmos.color = Color.yellow;
+                Gizmos.DrawSphere(limb.lerpPosition, 0.1f);
+            }
+            
+            if (_debugSettings.defaultPositions)
+            {
+                Gizmos.color = Color.green;
+                Gizmos.DrawWireSphere((Vector2)limb.startBone.transform.position + limb.direction * limb.length * limb.defaultDistance, 0.25f);
+            }
         }
+
+        if (!_debugSettings.bones) return;
 
         Gizmos.color = Color.blue;
 

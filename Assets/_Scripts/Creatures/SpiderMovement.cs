@@ -34,7 +34,7 @@ public class SpiderMovement : MonoBehaviour
 
     private void Update()
     {
-        transform.position = Vector3.SmoothDamp(transform.position, _nextPosition, ref _smoothVelocity, _speed);
+        transform.position = Vector3.SmoothDamp(transform.position, _nextPosition, ref _smoothVelocity, 1f / _speed);
     }
 
     private Vector3 GetNextPosition()
