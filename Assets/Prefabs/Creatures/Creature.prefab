@@ -73,7 +73,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3377426433073949596}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3acbfb5c163225847ae6108db3368d1f, type: 3}
   m_Name: 
@@ -98,15 +98,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5d787e55d1d059642bd0eea3bcfb2195, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  limbBase: {fileID: 7090699460722082573}
-  legAmount: 20
   legLength: 8
-  footDefaultDistance: 0.8
-  footSpacingFromBody: 1
+  footSpacingFromBody: 3
+  footFloatingDistance: 0.5
+  footPlacementRange: 1
   stepDuration: 0.05
   legLayerMask:
     serializedVersion: 2
     m_Bits: 64
+  limbBase: {fileID: 7090699460722082573}
+  legAmount: 20
   solversParent: {fileID: 1550352268150661577}
   targetsParent: {fileID: 5139737147527586932}
   rendererParent: {fileID: 5026908615720586164}
@@ -118,9 +119,11 @@ MonoBehaviour:
   _enableDebug: 1
   _debugSettings:
     bones: 1
-    raycasts: 1
-    defaultPositions: 1
+    raycasts: 0
     footBodySpacing: 1
+    legLength: 1
+    floatingPositions: 1
+    footPlacementRange: 1
     lerpPositions: 1
     targetPositions: 1
 --- !u!114 &3766422308475223437

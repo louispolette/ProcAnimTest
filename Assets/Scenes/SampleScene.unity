@@ -489,13 +489,13 @@ Camera:
     serializedVersion: 2
     x: 0
     y: 0
-    width: 1
-    height: 1
+    width: 0.627451
+    height: 0.83623695
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 34
   orthographic: 1
-  orthographic size: 9.75
+  orthographic size: 5.9375
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -520,7 +520,7 @@ Transform:
   m_GameObject: {fileID: 519420028}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -10}
+  m_LocalPosition: {x: 0, y: -0.14, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1099,43 +1099,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6286530986277928330, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
       propertyPath: _enableDebug
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6286530986277928330, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
-      propertyPath: footPlacementRange
-      value: 0.4
-      objectReference: {fileID: 0}
-    - target: {fileID: 6286530986277928330, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
-      propertyPath: footDefaultDistance
-      value: 0.8
-      objectReference: {fileID: 0}
-    - target: {fileID: 6286530986277928330, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
-      propertyPath: footSpacingFromBody
-      value: 5
-      objectReference: {fileID: 0}
-    - target: {fileID: 6286530986277928330, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
-      propertyPath: _debugSettings.legLength
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6286530986277928330, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
-      propertyPath: _debugSettings.footBodySpacing
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6286530986277928330, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
-      propertyPath: floatingFootPlacementRandomize
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6286530986277928330, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
-      propertyPath: _debugSettings.defaultPositions
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6286530986277928330, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
-      propertyPath: _debugSettings.footPlacementRange
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6286530986277928330, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
-      propertyPath: _debugSettings.floatingFootPlacementRange
-      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

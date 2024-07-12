@@ -11,7 +11,7 @@ public class Limb
     public Bone[] bones;
     public LineRenderer renderer;
     public Vector3 offsetFromRoot;
-    public float defaultDistance;
+    public float floatingDistance;
     public LimbSolver2D solver;
     public Transform IKTarget;
     public Vector2 direction;
@@ -29,7 +29,7 @@ public class Limb
         endBone = bones[bones.Length - 1];
         renderer = null;
         offsetFromRoot = endBone.transform.position - startBone.transform.position;
-        defaultDistance = 0.75f;
+        floatingDistance = 0.75f;
         solver = null;
         IKTarget = null;
         direction = Vector2.up;
