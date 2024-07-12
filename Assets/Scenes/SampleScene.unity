@@ -123,6 +123,11 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!4 &234580029 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 5883540459917183371, guid: 9f1e772dc2ed07043b29ce918ea90c5c, type: 3}
+  m_PrefabInstance: {fileID: 1782516005190509468}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &413365785
 GameObject:
   m_ObjectHideFlags: 0
@@ -134,7 +139,7 @@ GameObject:
   - component: {fileID: 413365787}
   - component: {fileID: 413365786}
   - component: {fileID: 413365788}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Square (3)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -264,7 +269,7 @@ GameObject:
   - component: {fileID: 443095525}
   - component: {fileID: 443095524}
   - component: {fileID: 443095526}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Square (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -483,14 +488,14 @@ Camera:
   m_NormalizedViewPortRect:
     serializedVersion: 2
     x: 0
-    y: 0.0034843206
+    y: 0
     width: 1
-    height: 0.9930314
+    height: 1
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 34
   orthographic: 1
-  orthographic size: 5.9375
+  orthographic size: 9.59375
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -638,7 +643,7 @@ GameObject:
   - component: {fileID: 729190840}
   - component: {fileID: 729190839}
   - component: {fileID: 729190841}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Square
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -768,7 +773,7 @@ GameObject:
   - component: {fileID: 1629803861}
   - component: {fileID: 1629803860}
   - component: {fileID: 1629803862}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Square (2)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -896,7 +901,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1931725517}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Terrain
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1044,13 +1049,33 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 59077358876055954, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
+      propertyPath: m_Layer
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 1311629424785403395, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
+      propertyPath: target
+      value: 
+      objectReference: {fileID: 234580029}
+    - target: {fileID: 1311629424785403395, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
+      propertyPath: _target
+      value: 
+      objectReference: {fileID: 234580029}
     - target: {fileID: 1311629424785403395, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
       propertyPath: m_Enabled
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3377426433073949596, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
       propertyPath: m_Name
       value: Creature
+      objectReference: {fileID: 0}
+    - target: {fileID: 3377426433073949596, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
+      propertyPath: m_Layer
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 4790905891601814474, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
+      propertyPath: m_Layer
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 5175651455898398456, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
       propertyPath: m_LocalPosition.x
@@ -1092,6 +1117,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5992922279737700872, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
+      propertyPath: m_Layer
+      value: 3
+      objectReference: {fileID: 0}
     - target: {fileID: 6286530986277928330, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
       propertyPath: legAmount
       value: 10
@@ -1099,6 +1128,18 @@ PrefabInstance:
     - target: {fileID: 6286530986277928330, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
       propertyPath: legLength
       value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 6286530986277928330, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
+      propertyPath: legLayerMask.m_Bits
+      value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 8262331593527189423, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
+      propertyPath: m_Layer
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 8737984153049788979, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
+      propertyPath: m_Layer
+      value: 3
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

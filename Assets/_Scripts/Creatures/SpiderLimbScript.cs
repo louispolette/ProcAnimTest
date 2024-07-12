@@ -18,8 +18,12 @@ public class SpiderLimbScript : MonoBehaviour
 
     [SerializeField] private float legLength;
 
-    [Tooltip("How much should the spider's base position extend its legs, 1 is fully extended")]
-    [SerializeField, Range(0f, 1f)] private float legBaseDistance = 0.75f;
+    [Tooltip("How much should the spider extend its leg when no surface is available, 1 is fully extended")]
+    [SerializeField, Range(0f, 1f)] private float footDefaultDistance = 0.75f;
+
+    [SerializeField] private float stepSpeed = 0.1f;
+
+    [SerializeField] private LayerMask legLayerMask;
 
     [Space]
 
@@ -58,8 +62,6 @@ public class SpiderLimbScript : MonoBehaviour
 
     public List<Limb> _limbs { get; private set; } = new List<Limb>();
 
-    private List<Vector3> _idealLegPositions = new List<Vector3>();
-
     private IKManager2D _IKManager;
 
     private Bone[] bones;
@@ -78,10 +80,45 @@ public class SpiderLimbScript : MonoBehaviour
     {
         CreateBones();
         LimbSetup();
-        GetIdealLegPositions();
         CacheBones();
 
         onLimbsSetupDone?.Invoke();
+    }
+
+    private void Update()
+    {
+        foreach (Limb limb in _limbs)
+        {
+            Ray2D ray = new Ray2D(limb.startBone.transform.position, limb.direction);
+            RaycastHit2D hit = Physics2D.Raycast(ray.origin, ray.direction, limb.length, legLayerMask);
+
+            bool targetPositionIsGrounded = false;
+
+            if (hit)
+            {
+                targetPositionIsGrounded = true;
+                limb.targetPosition = hit.point;
+
+                Debug.Log("Ground Found");
+
+                if (!limb.isOnGround) limb.MoveLerpPosition(true);
+            }
+            else
+            {
+                limb.targetPosition = ray.GetPoint(limb.length * limb.defaultDistance);
+            }
+
+            if (_enableDebug) Debug.DrawLine(ray.origin, ray.GetPoint(limb.length), Color.magenta);
+
+            if (Vector2.Distance(limb.startBone.transform.position, limb.lerpPosition) > limb.length)
+            {
+                Debug.Log("Leg Too Far");
+
+                limb.MoveLerpPosition(targetPositionIsGrounded);
+            }
+
+            limb.IKTarget.position = Vector2.Lerp(limb.IKTarget.position, limb.lerpPosition, stepSpeed);
+        }
     }
 
     #region setup
@@ -157,6 +194,9 @@ public class SpiderLimbScript : MonoBehaviour
         CreateSolver(newLimb);
         CreateRenderer(newLimb);
 
+        newLimb.direction = (newLimb.endBone.transform.position - newLimb.startBone.transform.position).normalized;
+        newLimb.defaultDistance = footDefaultDistance;
+
         return newLimb;
     }
 
@@ -184,6 +224,7 @@ public class SpiderLimbScript : MonoBehaviour
         newTarget.transform.position = limb.endBone.transform.position;
         newTarget.transform.SetParent(targetsParent, true);
         chain.target = newTarget.transform;
+        limb.IKTarget = newTarget.transform;
 
         // Effector
 
@@ -259,26 +300,25 @@ public class SpiderLimbScript : MonoBehaviour
     {
         Bone[] bones = limbBase.GetComponentsInChildren<Bone>();
     }
-    private void GetIdealLegPositions()
-    {
-        foreach (Limb limb in _limbs)
-        {
-            _idealLegPositions.Add(limb.offsetFromRoot * legBaseDistance);
-        }
-    }
 
     #endregion
+
 
 
     private void OnDrawGizmos()
     {
         if (!_enableDebug) return;
 
-        Gizmos.color = Color.yellow;
-
-        foreach (Vector3 position in _idealLegPositions)
+        foreach (Limb limb in _limbs)
         {
-            Gizmos.DrawSphere(limbBase.transform.position + position, 0.35f);
+            Gizmos.color = Color.red;
+            Gizmos.DrawSphere(limb.targetPosition, 0.2f);
+
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawSphere(limb.lerpPosition, 0.1f);
+
+            Gizmos.color = Color.green;
+            Gizmos.DrawSphere((Vector2)limb.startBone.transform.position + limb.direction * limb.length * limb.defaultDistance, 0.25f);
         }
 
         Gizmos.color = Color.blue;
