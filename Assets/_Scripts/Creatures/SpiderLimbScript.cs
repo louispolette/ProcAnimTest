@@ -180,7 +180,19 @@ public class SpiderLimbScript : MonoBehaviour
                 MoveLimb(limb, targetPositionIsGrounded, allowStepCancel : false);
             }
 
-            // Keep foot in position when the body is moving :
+            if (limb.ElbowIsInWall(legLayerMask))
+            {
+                limb.solver.flip = !limb.solver.flip;
+
+                limb.solver.UpdateIK(1f);
+
+                if (limb.ElbowIsInWall(legLayerMask))
+                {
+                    limb.solver.flip = !limb.solver.flip;
+                }
+            }
+
+            // Keep foot in position when the body is moving and limb isn't stepping :
 
             if (!limb.isStepping) 
             {
@@ -188,6 +200,8 @@ public class SpiderLimbScript : MonoBehaviour
             }
         }
     }
+
+    
 
     /// <summary>
     /// Makes the limb take a step

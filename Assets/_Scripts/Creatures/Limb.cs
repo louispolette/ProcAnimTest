@@ -6,9 +6,10 @@ using UnityEngine.U2D.IK;
 [Serializable]
 public class Limb
 {
+    public Bone[] bones;
     public Bone startBone;
     public Bone endBone;
-    public Bone[] bones;
+    public Bone elbowBone;
     public LineRenderer renderer;
     public Vector3 offsetFromRoot;
     public float floatingDistance;
@@ -27,6 +28,7 @@ public class Limb
         this.bones = bones;
         startBone = bones[0];
         endBone = bones[bones.Length - 1];
+        elbowBone = bones[1];
         renderer = null;
         offsetFromRoot = endBone.transform.position - startBone.transform.position;
         floatingDistance = 0.75f;
@@ -82,5 +84,12 @@ public class Limb
         }
 
         isStepping = false;
+    }
+
+    public bool ElbowIsInWall(LayerMask layerMask)
+    {
+        RaycastHit2D hit = Physics2D.Linecast(startBone.transform.position, elbowBone.transform.position, layerMask);
+
+        return hit;
     }
 }
