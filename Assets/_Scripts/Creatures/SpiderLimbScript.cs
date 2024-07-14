@@ -33,6 +33,9 @@ public class SpiderLimbScript : MonoBehaviour
     [Tooltip("Duration in seconds of a step")]
     [SerializeField] private float stepDuration = 0.1f;
 
+    [Tooltip("Duration in seconds of a limb retracting when no valid position is found")]
+    [SerializeField] public float retractDuration = 0.25f;
+
     [Space]
 
     [Tooltip("The layers that the legs will attach to")]
@@ -180,16 +183,23 @@ public class SpiderLimbScript : MonoBehaviour
                 MoveLimb(limb, targetPositionIsGrounded, allowStepCancel : false);
             }
 
-            if (limb.ElbowIsInWall(legLayerMask))
+            if (limb.IsElbowIsInWall(legLayerMask))
             {
                 limb.solver.flip = !limb.solver.flip;
-
                 limb.solver.UpdateIK(1f);
 
-                if (limb.ElbowIsInWall(legLayerMask))
+                if (limb.IsElbowIsInWall(legLayerMask))
                 {
                     limb.solver.flip = !limb.solver.flip;
+
+                    limb.isForcedIntoWall = true;
+                    limb.isRetracted = true;
                 }
+            }
+            else
+            {
+                limb.isForcedIntoWall = false;
+                limb.isRetracted = false;
             }
 
             // Keep foot in position when the body is moving and limb isn't stepping :

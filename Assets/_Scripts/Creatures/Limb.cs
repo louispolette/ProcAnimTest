@@ -22,6 +22,12 @@ public class Limb
     public bool hasAvailableGround;
     public Coroutine stepCoroutine;
     public bool isStepping;
+    public bool isForcedIntoWall;
+    public bool isRetracted;
+    public Coroutine retractCoroutine;
+    public bool isRetracting;
+    public bool isExtending;
+    public float currentRetractation;
 
     public Limb(Bone[] bones)
     {
@@ -41,6 +47,11 @@ public class Limb
         hasAvailableGround = false;
         stepCoroutine = null;
         isStepping = false;
+        isForcedIntoWall = false;
+        isRetracted = false;
+        retractCoroutine = null;
+        isRetracting = false;
+        currentRetractation = 0;
     }
 
     public float GetLimbLength()
@@ -86,7 +97,31 @@ public class Limb
         isStepping = false;
     }
 
-    public bool ElbowIsInWall(LayerMask layerMask)
+    public IEnumerator RetractLimb(float duration, float targetRetractation)
+    {
+        if (currentRetractation == targetRetractation) yield break;
+
+        isRetracting = currentRetractation - targetRetractation < 0;
+        isExtending = !isRetracting;
+
+        duration *= Mathf.Abs(currentRetractation - targetRetractation);
+        float startTime = Time.time;
+        float elapsedTime = 0f;
+
+        while (elapsedTime < duration)
+        {
+            elapsedTime = Time.time - startTime;
+            currentRetractation = Mathf.Lerp(currentRetractation, targetRetractation, elapsedTime / duration);
+            yield return null;
+        }
+
+        currentRetractation = targetRetractation;
+
+        isRetracting = false;
+        isExtending = false;
+    }
+
+    public bool IsElbowIsInWall(LayerMask layerMask)
     {
         RaycastHit2D hit = Physics2D.Linecast(startBone.transform.position, elbowBone.transform.position, layerMask);
 

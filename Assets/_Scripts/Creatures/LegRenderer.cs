@@ -42,15 +42,35 @@ public class LegRenderer : MonoBehaviour
     {
         foreach (Limb limb in _limbs)
         {
+            if (limb.isRetracted && !limb.isRetracting && limb.currentRetractation < 1f)
+            {
+                StartRetractationCoroutine(limb, 1f);
+            }
+            else if (!limb.isRetracted && !limb.isExtending && limb.currentRetractation > 0f)
+            {
+                StartRetractationCoroutine(limb, 0f);
+            }
+
             bonePositions.Clear();
 
             foreach (Bone bone in limb.bones)
             {
-                bonePositions.Add(bone.transform.position);
+                bonePositions.Add(limb.startBone.transform.position
+                               + (bone.transform.position - limb.startBone.transform.position) * (1 - limb.currentRetractation));
             }
 
             limb.renderer.positionCount = bonePositions.Count;
             limb.renderer.SetPositions(bonePositions.ToArray());
         }
+    }
+
+    private void StartRetractationCoroutine(Limb limb, float targetRetractation)
+    {
+        if (limb.retractCoroutine != null)
+        {
+            StopCoroutine(limb.retractCoroutine);
+        }
+
+        limb.retractCoroutine = StartCoroutine(limb.RetractLimb(_limbScript.retractDuration, targetRetractation));
     }
 }
