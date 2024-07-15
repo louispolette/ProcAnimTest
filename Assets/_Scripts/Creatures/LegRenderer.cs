@@ -42,11 +42,11 @@ public class LegRenderer : MonoBehaviour
     {
         foreach (Limb limb in _limbs)
         {
-            if (limb.IsRetracted && !limb.IsRetracting && limb.CurrentRetractation < 1f)
+            if (limb.HasNoValidPosition && !limb.IsRetracting && limb.CurrentRetractation < 1f)
             {
                 StartRetractationCoroutine(limb, 1f);
             }
-            else if (!limb.IsRetracted && !limb.IsExtending && limb.CurrentRetractation > 0f)
+            else if (!limb.HasNoValidPosition && !limb.IsExtending && limb.CurrentRetractation > 0f)
             {
                 StartRetractationCoroutine(limb, 0f);
             }
@@ -59,7 +59,7 @@ public class LegRenderer : MonoBehaviour
 
                 if (i == 1)
                 {
-                    bonePosition = Vector3.Lerp(limb.GetFlippedKneePosition(), limb.Bones[i].transform.position, limb.FlipCompletion);
+                    bonePosition = Vector3.Lerp(limb.GetFlippedKneePosition(), limb.Bones[i].transform.position, 1 - (MathF.Cos(limb.FlipCompletion * MathF.PI) + 1) / 2);
                 }
                 else
                 {

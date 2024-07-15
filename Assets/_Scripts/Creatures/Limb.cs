@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.U2D.IK;
 
@@ -7,6 +8,7 @@ using UnityEngine.U2D.IK;
 public class Limb
 {
     #region members
+    public int ID { get; } = -1;
     /// <summary>
     /// The 3 bones that that make the limb, from hip bone to foot bone
     /// </summary>
@@ -60,14 +62,7 @@ public class Limb
     /// </summary>
     public bool IsStepping { get; protected set; } = false;
     public Coroutine StepCoroutine { get; set; }
-    /// <summary>
-    /// True if the limb has no other solution than to have its knee bone in a wall
-    /// </summary>
-    public bool IsForcedIntoWall { get; set; } = false;
-    /// <summary>
-    /// Wether the limb is hidden or not
-    /// </summary>
-    public bool IsRetracted { get; set; } = false;
+    public bool HasNoValidPosition { get; set; } = false;
     /// <summary>
     /// Wether the limb is in the middle of hiding or not
     /// </summary>
@@ -87,12 +82,14 @@ public class Limb
     public float FlipCompletion { get; protected set; } = 1f;
     #endregion
 
-    public Limb(Bone[] bones)
+    public Limb(Bone[] bones, int ID = -1)
     {
         if (bones.Length != 3)
         {
             Debug.LogError($"A limb must contain 3 bones, this one contains {bones.Length}");
         }
+
+        this.ID = ID;
 
         this.Bones = bones;
         HipBone = bones[0];

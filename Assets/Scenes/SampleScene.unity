@@ -1041,16 +1041,44 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6286530986277928330, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
+      propertyPath: legAmount
+      value: 20
+      objectReference: {fileID: 0}
+    - target: {fileID: 6286530986277928330, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
       propertyPath: _enableDebug
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6286530986277928330, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
       propertyPath: retractDuration
-      value: 0.1
+      value: 0.05
       objectReference: {fileID: 0}
     - target: {fileID: 6286530986277928330, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
       propertyPath: legLayerMask.m_Bits
       value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 6286530986277928330, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
+      propertyPath: _debugSettings.bones
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6286530986277928330, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
+      propertyPath: _debugSettings.legLength
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6286530986277928330, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
+      propertyPath: _debugSettings.lerpPositions
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6286530986277928330, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
+      propertyPath: _debugSettings.targetPositions
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6286530986277928330, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
+      propertyPath: _debugSettings.floatingPositions
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6286530986277928330, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
+      propertyPath: _debugSettings.footPlacementRange
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

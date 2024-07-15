@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Unity.PlasticSCM.Editor.WebApi;
 using UnityEngine;
 using UnityEngine.U2D.IK;
 using UnityEngine.UIElements;
@@ -20,12 +21,15 @@ public class SpiderLimbScript : MonoBehaviour
 
     [Space]
 
-    [Tooltip("How much should the spider extend its leg when no surface is available, 1 is fully extended")]
+    [Tooltip("Wether to allow feet to \"float\" when no solid ground is available to them")]
+    [SerializeField] private bool allowFloatingFeet = false;
+
+    [Tooltip("How much should the spider extend its leg when no surface is available and are allow to have floating feet\n\n 1 is fully extended")]
     [SerializeField, Range(0f, 1f)] private float footFloatingDistance = 0.75f;
 
     [Tooltip("Makes legs place themselvses slightly nearer/farther than their default position when no surface is available " +
-        "to avoid making a clear ring of feet. 0 to disable and 1 to have the full possible range " +
-        "(the range depends on footSpacingFromBase and legLength)")]
+        "to avoid making a clear ring of feet.\n\n0 = disable\n1 = full possible range" +
+        "\n\nThe range depends on footSpacingFromBase and legLength")]
     [SerializeField, Range(0f, 1f)] private float footPlacementRange = 0.5f;
 
     [Space]
@@ -114,6 +118,8 @@ public class SpiderLimbScript : MonoBehaviour
     public delegate void OnLimbsSetupDone();
     public event OnLimbsSetupDone onLimbsSetupDone;
 
+    private List<Limb> searchList = new List<Limb>();
+
     #endregion
 
     private void Awake()
@@ -161,11 +167,21 @@ public class SpiderLimbScript : MonoBehaviour
                     continue;
                 }
             }
-            else
+            else if (allowFloatingFeet)
             {
                 float baseDist = Mathf.Lerp(limb.SpacingFromBase, limb.Length, footFloatingDistance);
                 float randomizedDist = baseDist + Random.Range(limb.SpacingFromBase - baseDist, limb.Length - baseDist) * footPlacementRange;
                 limb.TargetPosition = ray.GetPoint(randomizedDist);
+            }
+            else
+            {
+                limb.HasAvailableGround = false;
+                limb.HasNoValidPosition = !SearchValidNeighborLimb(limb);
+
+                if (!limb.HasNoValidPosition)
+                {
+                    MoveLimb(limb, true);
+                }
             }
 
             if (_enableDebug && _debugSettings.raycasts) Debug.DrawLine(ray.origin, ray.GetPoint(limb.Length), Color.magenta);
@@ -195,14 +211,12 @@ public class SpiderLimbScript : MonoBehaviour
                 {
                     FlipLimb(limb);
 
-                    limb.IsForcedIntoWall = true;
-                    limb.IsRetracted = true;
+                    limb.HasNoValidPosition = !SearchValidNeighborLimb(limb);
                 }
             }
             else
             {
-                limb.IsForcedIntoWall = false;
-                limb.IsRetracted = false;
+                limb.HasNoValidPosition = false;
             }
 
             // Keep foot in position when the body is moving and limb isn't stepping :
@@ -252,6 +266,85 @@ public class SpiderLimbScript : MonoBehaviour
         limb.FlipCoroutine = StartCoroutine(limb.FlipKnee(kneeFlipDuration));
     }
 
+    private bool SearchValidNeighborLimb(Limb limb)
+    {
+        searchList.Clear();
+        searchList.Add(limb);
+
+        // We search in 2 directions, clockwise & counterclockwise :
+
+        int clockwiseLimbID = limb.ID + 1;
+        int counterClockwiseLimbID = limb.ID - 1;
+
+        bool goClockwise = true; // This lets us alternate between clockwise & counter clockwise search
+
+        // These let us know when a search direction has encountered a limb that has already been seen :
+
+        bool clockwiseHasLooped = false;
+        bool counterClockwiseHasLooped = false;
+
+        Limb neighborLimb = null; // The limb that we are currently inspecting
+        bool limbFound = false; // Wether we ended up finding a valid limb or not
+
+        while (!(clockwiseHasLooped && counterClockwiseHasLooped)) // If both searches have looped without finding a valid limb, then we end the while() loop
+        {
+            neighborLimb = null;
+
+            if (goClockwise && !clockwiseHasLooped)
+            {
+                if (clockwiseLimbID >= _limbs.Count)
+                {
+                    clockwiseLimbID = 0;
+                }
+
+                neighborLimb = _limbs[clockwiseLimbID];
+                clockwiseLimbID++;
+            }
+            else if (!goClockwise && !counterClockwiseHasLooped)
+            {
+                if (counterClockwiseLimbID < 0)
+                {
+                    counterClockwiseLimbID = _limbs.Count - 1;
+                }
+
+                neighborLimb = _limbs[counterClockwiseLimbID];
+                counterClockwiseLimbID--;
+            }
+
+            goClockwise = !goClockwise; // Switch search direction
+
+            if (neighborLimb == null) continue; // neighborLimb being null means that one or both of the search directions have looped
+
+            if (searchList.Contains(neighborLimb)) // Check if we haven't already seen this limb, if we did, then one of the searching directions has looped
+            {
+                if (goClockwise)
+                {
+                    clockwiseHasLooped = true;
+                }
+                else
+                {
+                    counterClockwiseHasLooped = true;
+                }
+            }
+            else if (!neighborLimb.HasNoValidPosition) // If we haven't seen it, we check if it is valid
+            {
+                limbFound = true;
+                break; // Valid limb found, we can stop searching
+            }
+            else // If it isn't valid, we put in the list of limbs we've checked
+            {
+                searchList.Add(neighborLimb);
+            }
+        }
+
+        if (limbFound)
+        {
+            limb.TargetPosition = neighborLimb.TargetPosition;
+        }
+
+        return limbFound;
+    }
+
     #endregion
 
     #region setup
@@ -263,9 +356,9 @@ public class SpiderLimbScript : MonoBehaviour
     {
         Bone[] limbRoots = GetDirectChildBones(limbBase);
 
-        foreach (Bone limbStart in limbRoots)
+        for (int i = 0; i < limbRoots.Length; i++)
         {
-            _limbs.Add(BuildLimb(limbStart));
+            _limbs.Add(BuildLimb(limbRoots[i], i)) ;
         }
     }
 
@@ -314,7 +407,7 @@ public class SpiderLimbScript : MonoBehaviour
     /// </summary>
     /// <param name="limbStart">First bone of the limb</param>
     /// <returns></returns>
-    private Limb BuildLimb(Bone limbStart)
+    private Limb BuildLimb(Bone limbStart, int limbID)
     {
         List<Bone> limbBones = new();
 
@@ -322,7 +415,7 @@ public class SpiderLimbScript : MonoBehaviour
 
         GetAllChildBones(limbStart.transform, limbBones);
 
-        Limb newLimb = new Limb(limbBones.ToArray());
+        Limb newLimb = new Limb(limbBones.ToArray(), limbID);
 
         CreateSolver(newLimb);
         CreateRenderer(newLimb);
