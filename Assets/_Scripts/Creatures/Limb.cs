@@ -58,6 +58,10 @@ public class Limb
     /// </summary>
     public bool HasAvailableGround { get; set; } = false;
     /// <summary>
+    /// This value is false when the limb could not find a suitable position and is either retracted or using another limb's target position
+    /// </summary>
+    public bool IsInIdealPosition { get; set; } = true;
+    /// <summary>
     /// Wether the limb is currently doing a step or not
     /// </summary>
     public bool IsStepping { get; protected set; } = false;

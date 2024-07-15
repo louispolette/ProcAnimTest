@@ -156,32 +156,65 @@ public class SpiderLimbScript : MonoBehaviour
 
             bool targetPositionIsGrounded = false;
 
+            bool foundtargetPosition = true;
+            bool kneeIsClipping = false;
+
             if (hit)
             {
                 targetPositionIsGrounded = true;
-                limb.TargetPosition = hit.point;
 
-                if (!limb.HasAvailableGround)
+                if (limb.IsInIdealPosition)
                 {
+                    limb.TargetPosition = hit.point;
+                }
+
+                if (!limb.HasAvailableGround || !limb.IsInIdealPosition)
+                {
+                    limb.IsInIdealPosition = true;
                     MoveLimb(limb, true);
                     continue;
                 }
             }
             else if (allowFloatingFeet)
             {
+                limb.IsInIdealPosition = true;
                 float baseDist = Mathf.Lerp(limb.SpacingFromBase, limb.Length, footFloatingDistance);
                 float randomizedDist = baseDist + Random.Range(limb.SpacingFromBase - baseDist, limb.Length - baseDist) * footPlacementRange;
                 limb.TargetPosition = ray.GetPoint(randomizedDist);
             }
             else
             {
-                limb.HasAvailableGround = false;
-                limb.HasNoValidPosition = !SearchValidNeighborLimb(limb);
+                foundtargetPosition = SearchValidNeighborLimb(limb); // Tries to find a limb with a valid position so it can copy its target position
 
-                if (!limb.HasNoValidPosition)
+                if (foundtargetPosition)
                 {
-                    MoveLimb(limb, true);
+                    targetPositionIsGrounded = true;
+                    limb.IsInIdealPosition = false;
                 }
+            }
+
+            if (limb.IsKneeInWall(legLayerMask)) // Flip elbow if it is in a wall
+            {
+                FlipLimb(limb);
+                limb.Solver.UpdateIK(1f);
+
+                if (limb.IsKneeInWall(legLayerMask)) // Check again after flip
+                {
+                    FlipLimb(limb); // Flip back
+
+                    kneeIsClipping = !SearchValidNeighborLimb(limb); // Tries to find a limb with a valid position so it can copy its target position
+
+                    if (!kneeIsClipping)
+                    {
+                        targetPositionIsGrounded = true;
+                        limb.IsInIdealPosition = false;
+                    }
+                }
+            }
+
+            if (!foundtargetPosition || kneeIsClipping)
+            {
+                limb.HasNoValidPosition = true;
             }
 
             if (_enableDebug && _debugSettings.raycasts) Debug.DrawLine(ray.origin, ray.GetPoint(limb.Length), Color.magenta);
@@ -199,24 +232,8 @@ public class SpiderLimbScript : MonoBehaviour
             }
             else if (limbTooClose)  
             {
+                Debug.Log("Limb Too Close !");
                 MoveLimb(limb, targetPositionIsGrounded, allowStepCancel : false);
-            }
-
-            if (limb.IsKneeInWall(legLayerMask)) // Flip elbow if it is in a wall
-            {
-                FlipLimb(limb);
-                limb.Solver.UpdateIK(1f);
-
-                if (limb.IsKneeInWall(legLayerMask)) // Check again after flip and retract if also in wall
-                {
-                    FlipLimb(limb);
-
-                    limb.HasNoValidPosition = !SearchValidNeighborLimb(limb);
-                }
-            }
-            else
-            {
-                limb.HasNoValidPosition = false;
             }
 
             // Keep foot in position when the body is moving and limb isn't stepping :
@@ -268,6 +285,9 @@ public class SpiderLimbScript : MonoBehaviour
 
     private bool SearchValidNeighborLimb(Limb limb)
     {
+        int iterationLimit = 100;
+        int iterations = 0;
+
         searchList.Clear();
         searchList.Add(limb);
 
@@ -288,6 +308,14 @@ public class SpiderLimbScript : MonoBehaviour
 
         while (!(clockwiseHasLooped && counterClockwiseHasLooped)) // If both searches have looped without finding a valid limb, then we end the while() loop
         {
+            iterations++;
+
+            if (iterations > iterationLimit)
+            {
+                Debug.LogWarning("Iteration limit reached !");
+                break;
+            }
+
             neighborLimb = null;
 
             if (goClockwise && !clockwiseHasLooped)
@@ -339,7 +367,12 @@ public class SpiderLimbScript : MonoBehaviour
 
         if (limbFound)
         {
+            Debug.Log("Limb Found");
             limb.TargetPosition = neighborLimb.TargetPosition;
+        }
+        else
+        {
+            Debug.Log("No valid limb found");
         }
 
         return limbFound;
@@ -585,9 +618,9 @@ public class SpiderLimbScript : MonoBehaviour
 
                 if (limb.HasAvailableGround)
                 {
-                    Gizmos.DrawSphere(limb.TargetPosition, 0.2f);
+                    Gizmos.DrawSphere(limb.TargetPosition, 0.4f);
                 }
-                else
+                else if (allowFloatingFeet)
                 {
                     float floatingDist = Mathf.Lerp(footSpacingFromBase, legLength, footFloatingDistance);
                     Gizmos.DrawLine((Vector2)limbBase.transform.position + limb.Direction * Mathf.Lerp(floatingDist, footSpacingFromBase, footPlacementRange),
@@ -597,8 +630,8 @@ public class SpiderLimbScript : MonoBehaviour
 
             if (_debugSettings.lerpPositions)
             {
-                Gizmos.color = Color.yellow;
-                Gizmos.DrawSphere(limb.LerpPosition, 0.15f);
+                Gizmos.color = (limb.HasAvailableGround) ? Color.yellow : Color.grey;
+                Gizmos.DrawSphere(limb.LerpPosition, (limb.HasAvailableGround) ? 0.15f : 0.3f);
             }
         }
 
