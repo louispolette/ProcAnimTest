@@ -16,7 +16,7 @@ public class SpiderLimbScript : MonoBehaviour
     [SerializeField] private float legLength;
 
     [Tooltip("Limbs will reposition themselves if their foot is too close to the body")]
-    [SerializeField] private float footSpacingFromBody = 2f;
+    [SerializeField] private float footSpacingFromBase = 2f;
 
     [Space]
 
@@ -25,7 +25,7 @@ public class SpiderLimbScript : MonoBehaviour
 
     [Tooltip("Makes legs place themselvses slightly nearer/farther than their default position when no surface is available " +
         "to avoid making a clear ring of feet. 0 to disable and 1 to have the full possible range " +
-        "(the range depends on footSpacingFromBody and legLength)")]
+        "(the range depends on footSpacingFromBase and legLength)")]
     [SerializeField, Range(0f, 1f)] private float footPlacementRange = 0.5f;
 
     [Space]
@@ -90,7 +90,7 @@ public class SpiderLimbScript : MonoBehaviour
     {
         public bool bones;
         public bool raycasts;
-        public bool footBodySpacing;
+        public bool footSpacingFromBase;
         public bool legLength;
         public bool floatingPositions;
         public bool footPlacementRange;
@@ -119,9 +119,9 @@ public class SpiderLimbScript : MonoBehaviour
 
         #region warning logs
 
-        if (legLength <= footSpacingFromBody)
+        if (legLength <= footSpacingFromBase)
         {
-            Debug.LogWarning("legLength is lower or equal to footSpacingFromBody, this may cause issues");
+            Debug.LogWarning("legLength is lower or equal to footSpacingFromBase, this may cause issues");
         }
 
         #endregion
@@ -142,17 +142,17 @@ public class SpiderLimbScript : MonoBehaviour
     {
         foreach (Limb limb in _limbs)
         {
-            Ray2D ray = new Ray2D(limb.startBone.transform.position, limb.direction);
-            RaycastHit2D hit = Physics2D.Raycast(ray.origin, ray.direction, limb.length, legLayerMask);
+            Ray2D ray = new Ray2D(limb.HipBone.transform.position, limb.Direction);
+            RaycastHit2D hit = Physics2D.Raycast(ray.origin, ray.direction, limb.Length, legLayerMask);
 
             bool targetPositionIsGrounded = false;
 
             if (hit)
             {
                 targetPositionIsGrounded = true;
-                limb.targetPosition = hit.point;
+                limb.TargetPosition = hit.point;
 
-                if (!limb.hasAvailableGround)
+                if (!limb.HasAvailableGround)
                 {
                     MoveLimb(limb, true);
                     continue;
@@ -160,19 +160,19 @@ public class SpiderLimbScript : MonoBehaviour
             }
             else
             {
-                float dist = Mathf.Lerp(footSpacingFromBody, limb.length, footFloatingDistance);
-                float randomDist = dist + Random.Range(footSpacingFromBody - dist, limb.length - dist) * footPlacementRange;
-                limb.targetPosition = ray.GetPoint(randomDist);
+                float baseDist = Mathf.Lerp(limb.SpacingFromBase, limb.Length, footFloatingDistance);
+                float randomizedDist = baseDist + Random.Range(limb.SpacingFromBase - baseDist, limb.Length - baseDist) * footPlacementRange;
+                limb.TargetPosition = ray.GetPoint(randomizedDist);
             }
 
-            if (_enableDebug && _debugSettings.raycasts) Debug.DrawLine(ray.origin, ray.GetPoint(limb.length), Color.magenta);
+            if (_enableDebug && _debugSettings.raycasts) Debug.DrawLine(ray.origin, ray.GetPoint(limb.Length), Color.magenta);
 
             // The limb will move under one of the 2 following conditions :
 
             // The limb cannot extend further
-            bool limbOverExtended = Vector2.Distance(limb.startBone.transform.position, limb.lerpPosition) > limb.length;
+            bool limbOverExtended = Vector2.Distance(limb.HipBone.transform.position, limb.LerpPosition) > limb.Length;
             // The limb's lerp position is too close to the body (ignored if the limb is attached to ground)
-            bool limbTooClose = !limb.hasAvailableGround && Vector2.Distance(limb.lerpPosition, limbBase.transform.position) < footSpacingFromBody;
+            bool limbTooClose = !limb.HasAvailableGround && Vector2.Distance(limb.LerpPosition, limbBase.transform.position) < footSpacingFromBase;
 
             if (limbOverExtended)
             {
@@ -183,30 +183,30 @@ public class SpiderLimbScript : MonoBehaviour
                 MoveLimb(limb, targetPositionIsGrounded, allowStepCancel : false);
             }
 
-            if (limb.IsElbowIsInWall(legLayerMask))
+            if (limb.IsElbowIsInWall(legLayerMask)) // Flip elbow if it is in a wall
             {
-                limb.solver.flip = !limb.solver.flip;
-                limb.solver.UpdateIK(1f);
+                limb.Solver.flip = !limb.Solver.flip;
+                limb.Solver.UpdateIK(1f);
 
-                if (limb.IsElbowIsInWall(legLayerMask))
+                if (limb.IsElbowIsInWall(legLayerMask)) // Check again after flip and retract if also in wall
                 {
-                    limb.solver.flip = !limb.solver.flip;
+                    limb.Solver.flip = !limb.Solver.flip;
 
-                    limb.isForcedIntoWall = true;
-                    limb.isRetracted = true;
+                    limb.IsForcedIntoWall = true;
+                    limb.IsRetracted = true;
                 }
             }
             else
             {
-                limb.isForcedIntoWall = false;
-                limb.isRetracted = false;
+                limb.IsForcedIntoWall = false;
+                limb.IsRetracted = false;
             }
 
             // Keep foot in position when the body is moving and limb isn't stepping :
 
-            if (!limb.isStepping) 
+            if (!limb.IsStepping) 
             {
-                limb.IKTarget.transform.position = limb.lerpPosition;
+                limb.IKTarget.transform.position = limb.LerpPosition;
             }
         }
     }
@@ -223,14 +223,14 @@ public class SpiderLimbScript : MonoBehaviour
     {
         limb.MoveLerpPosition(targetPositionIsGrounded);
 
-        if (limb.isStepping && !allowStepCancel) return; // Stop here if a step is happening and we're not allowed to cancel it
+        if (limb.IsStepping && !allowStepCancel) return; // Stop here if a step is happening and we're not allowed to cancel it
 
-        if (limb.stepCoroutine != null)
+        if (limb.StepCoroutine != null)
         {
-            StopCoroutine(limb.stepCoroutine);
+            StopCoroutine(limb.StepCoroutine);
         }
 
-        limb.stepCoroutine = StartCoroutine(limb.Step(stepDuration));
+        limb.StepCoroutine = StartCoroutine(limb.Step(stepDuration));
     }
 
     #endregion
@@ -308,8 +308,8 @@ public class SpiderLimbScript : MonoBehaviour
         CreateSolver(newLimb);
         CreateRenderer(newLimb);
 
-        newLimb.direction = (newLimb.endBone.transform.position - newLimb.startBone.transform.position).normalized;
-        newLimb.floatingDistance = footFloatingDistance;
+        newLimb.SpacingFromBase = this.footSpacingFromBase;
+        newLimb.FloatingDistance = this.footFloatingDistance;
 
         return newLimb;
     }
@@ -324,29 +324,29 @@ public class SpiderLimbScript : MonoBehaviour
 
         GameObject newSolver = new GameObject("Solver");
         newSolver.transform.parent = solversParent;
-        limb.solver = newSolver.AddComponent<LimbSolver2D>();
+        limb.Solver = newSolver.AddComponent<LimbSolver2D>();
 
-        limb.solver.solveFromDefaultPose = solverParameters.solveFromDefaultPose;
-        limb.solver.constrainRotation = solverParameters.constrainRotation;
-        limb.solver.flip = solverParameters.flip;
+        limb.Solver.solveFromDefaultPose = solverParameters.solveFromDefaultPose;
+        limb.Solver.constrainRotation = solverParameters.constrainRotation;
+        limb.Solver.flip = solverParameters.flip;
 
         // Target
 
-        IKChain2D chain = limb.solver.GetChain(0);
+        IKChain2D chain = limb.Solver.GetChain(0);
 
         GameObject newTarget = new GameObject("Target");
-        newTarget.transform.position = limb.endBone.transform.position;
+        newTarget.transform.position = limb.FootBone.transform.position;
         newTarget.transform.SetParent(targetsParent, true);
         chain.target = newTarget.transform;
         limb.IKTarget = newTarget.transform;
 
         // Effector
 
-        chain.effector = limb.endBone.transform;
+        chain.effector = limb.FootBone.transform;
 
         // Add to manager
 
-        _IKManager.AddSolver(limb.solver);
+        _IKManager.AddSolver(limb.Solver);
     }
 
     /// <summary>
@@ -356,7 +356,7 @@ public class SpiderLimbScript : MonoBehaviour
     private void CreateRenderer(Limb limb)
     {
         LineRenderer newRenderer = Instantiate(lineRendererPrefab, rendererParent);
-        limb.renderer = newRenderer;
+        limb.Renderer = newRenderer;
     }
 
     /// <summary>
@@ -421,12 +421,12 @@ public class SpiderLimbScript : MonoBehaviour
     {
         if (!_enableDebug) return;
 
-        if (_debugSettings.footBodySpacing)
+        if (_debugSettings.footSpacingFromBase)
         {
             if (footFloatingDistance != 0)
             {
                 Gizmos.color = (footPlacementRange != 0) ? Color.white : Color.gray;
-                Gizmos.DrawWireSphere(limbBase.transform.position, footSpacingFromBody);
+                Gizmos.DrawWireSphere(limbBase.transform.position, footSpacingFromBase);
             }
         }
 
@@ -444,19 +444,19 @@ public class SpiderLimbScript : MonoBehaviour
             if (footPlacementRange != 1)
             {
                 Gizmos.color = Color.blue;
-                Gizmos.DrawWireSphere(limbBase.transform.position, Mathf.Lerp(footSpacingFromBody, legLength, footFloatingDistance));
+                Gizmos.DrawWireSphere(limbBase.transform.position, Mathf.Lerp(footSpacingFromBase, legLength, footFloatingDistance));
             }
         }
 
         if (_debugSettings.footPlacementRange)
         {
             Gizmos.color = Color.black;
-            float floatingDist = Mathf.Lerp(footSpacingFromBody, legLength, footFloatingDistance);
+            float floatingDist = Mathf.Lerp(footSpacingFromBase, legLength, footFloatingDistance);
             if (footPlacementRange != 1 && footPlacementRange != 0)
             {
                 if (footFloatingDistance != 0)
                 {
-                    Gizmos.DrawWireSphere(limbBase.transform.position, Mathf.Lerp(floatingDist, footSpacingFromBody, footPlacementRange));
+                    Gizmos.DrawWireSphere(limbBase.transform.position, Mathf.Lerp(floatingDist, footSpacingFromBase, footPlacementRange));
                 }
                 if (footFloatingDistance != 1)
                 {
@@ -471,22 +471,22 @@ public class SpiderLimbScript : MonoBehaviour
             {
                 Gizmos.color = Color.red;
 
-                if (limb.hasAvailableGround)
+                if (limb.HasAvailableGround)
                 {
-                    Gizmos.DrawSphere(limb.targetPosition, 0.2f);
+                    Gizmos.DrawSphere(limb.TargetPosition, 0.2f);
                 }
                 else
                 {
-                    float floatingDist = Mathf.Lerp(footSpacingFromBody, legLength, footFloatingDistance);
-                    Gizmos.DrawLine((Vector2)limbBase.transform.position + limb.direction * Mathf.Lerp(floatingDist, footSpacingFromBody, footPlacementRange),
-                                    (Vector2)limbBase.transform.position + limb.direction * Mathf.Lerp(floatingDist, legLength, footPlacementRange));
+                    float floatingDist = Mathf.Lerp(footSpacingFromBase, legLength, footFloatingDistance);
+                    Gizmos.DrawLine((Vector2)limbBase.transform.position + limb.Direction * Mathf.Lerp(floatingDist, footSpacingFromBase, footPlacementRange),
+                                    (Vector2)limbBase.transform.position + limb.Direction * Mathf.Lerp(floatingDist, legLength, footPlacementRange));
                 }
             }
 
             if (_debugSettings.lerpPositions)
             {
                 Gizmos.color = Color.yellow;
-                Gizmos.DrawSphere(limb.lerpPosition, 0.15f);
+                Gizmos.DrawSphere(limb.LerpPosition, 0.15f);
             }
         }
 

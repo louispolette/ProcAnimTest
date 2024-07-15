@@ -42,35 +42,35 @@ public class LegRenderer : MonoBehaviour
     {
         foreach (Limb limb in _limbs)
         {
-            if (limb.isRetracted && !limb.isRetracting && limb.currentRetractation < 1f)
+            if (limb.IsRetracted && !limb.IsRetracting && limb.CurrentRetractation < 1f)
             {
                 StartRetractationCoroutine(limb, 1f);
             }
-            else if (!limb.isRetracted && !limb.isExtending && limb.currentRetractation > 0f)
+            else if (!limb.IsRetracted && !limb.IsExtending && limb.CurrentRetractation > 0f)
             {
                 StartRetractationCoroutine(limb, 0f);
             }
 
             bonePositions.Clear();
 
-            foreach (Bone bone in limb.bones)
+            foreach (Bone bone in limb.Bones)
             {
-                bonePositions.Add(limb.startBone.transform.position
-                               + (bone.transform.position - limb.startBone.transform.position) * (1 - limb.currentRetractation));
+                bonePositions.Add(limb.HipBone.transform.position
+                               + (bone.transform.position - limb.HipBone.transform.position) * (1 - limb.CurrentRetractation));
             }
 
-            limb.renderer.positionCount = bonePositions.Count;
-            limb.renderer.SetPositions(bonePositions.ToArray());
+            limb.Renderer.positionCount = bonePositions.Count;
+            limb.Renderer.SetPositions(bonePositions.ToArray());
         }
     }
 
     private void StartRetractationCoroutine(Limb limb, float targetRetractation)
     {
-        if (limb.retractCoroutine != null)
+        if (limb.RetractCoroutine != null)
         {
-            StopCoroutine(limb.retractCoroutine);
+            StopCoroutine(limb.RetractCoroutine);
         }
 
-        limb.retractCoroutine = StartCoroutine(limb.RetractLimb(_limbScript.retractDuration, targetRetractation));
+        limb.RetractCoroutine = StartCoroutine(limb.RetractLimb(_limbScript.retractDuration, targetRetractation));
     }
 }
