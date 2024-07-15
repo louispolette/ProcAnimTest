@@ -53,10 +53,21 @@ public class LegRenderer : MonoBehaviour
 
             bonePositions.Clear();
 
-            foreach (Bone bone in limb.Bones)
+            for (int i = 0; i < limb.Bones.Length; i++)
             {
+                Vector3 bonePosition = new();
+
+                if (i == 1)
+                {
+                    bonePosition = Vector3.Lerp(limb.GetFlippedKneePosition(), limb.Bones[i].transform.position, limb.FlipCompletion);
+                }
+                else
+                {
+                    bonePosition = limb.Bones[i].transform.position;
+                }
+
                 bonePositions.Add(limb.HipBone.transform.position
-                               + (bone.transform.position - limb.HipBone.transform.position) * (1 - limb.CurrentRetractation));
+                               + (bonePosition - limb.HipBone.transform.position) * (1 - limb.CurrentRetractation));
             }
 
             limb.Renderer.positionCount = bonePositions.Count;

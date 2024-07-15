@@ -33,8 +33,11 @@ public class SpiderLimbScript : MonoBehaviour
     [Tooltip("Duration in seconds of a step")]
     [SerializeField] private float stepDuration = 0.1f;
 
+    [Tooltip("Duration in seconds of a knee flipping positions")]
+    [SerializeField] private float kneeFlipDuration = 0.1f;
+
     [Tooltip("Duration in seconds of a limb retracting when no valid position is found")]
-    [SerializeField] public float retractDuration = 0.25f;
+    [SerializeField] public float retractDuration = 0.1f;
 
     [Space]
 
@@ -183,14 +186,14 @@ public class SpiderLimbScript : MonoBehaviour
                 MoveLimb(limb, targetPositionIsGrounded, allowStepCancel : false);
             }
 
-            if (limb.IsElbowIsInWall(legLayerMask)) // Flip elbow if it is in a wall
+            if (limb.IsKneeInWall(legLayerMask)) // Flip elbow if it is in a wall
             {
-                limb.Solver.flip = !limb.Solver.flip;
+                FlipLimb(limb);
                 limb.Solver.UpdateIK(1f);
 
-                if (limb.IsElbowIsInWall(legLayerMask)) // Check again after flip and retract if also in wall
+                if (limb.IsKneeInWall(legLayerMask)) // Check again after flip and retract if also in wall
                 {
-                    limb.Solver.flip = !limb.Solver.flip;
+                    FlipLimb(limb);
 
                     limb.IsForcedIntoWall = true;
                     limb.IsRetracted = true;
@@ -231,6 +234,22 @@ public class SpiderLimbScript : MonoBehaviour
         }
 
         limb.StepCoroutine = StartCoroutine(limb.Step(stepDuration));
+    }
+
+    /// <summary>
+    /// Flips the knee position of a limb
+    /// </summary>
+    /// <param name="limb">The limb to flip</param>
+    private void FlipLimb(Limb limb)
+    {
+        limb.Solver.flip = !limb.Solver.flip;
+
+        if (limb.FlipCoroutine != null)
+        {
+            StopCoroutine(limb.FlipCoroutine);
+        }
+
+        limb.FlipCoroutine = StartCoroutine(limb.FlipKnee(kneeFlipDuration));
     }
 
     #endregion

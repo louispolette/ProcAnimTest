@@ -81,6 +81,10 @@ public class Limb
     /// </summary>
     public float CurrentRetractation { get; protected set; } = 0f;
     public Coroutine RetractCoroutine { get; set; }
+
+    public bool IsFlipping {  get; protected set; } = false;
+    public Coroutine FlipCoroutine { get; set; }
+    public float FlipCompletion { get; protected set; } = 1f;
     #endregion
 
     public Limb(Bone[] bones)
@@ -153,6 +157,7 @@ public class Limb
         IsRetracting = CurrentRetractation - targetRetractation < 0;
         IsExtending = !IsRetracting;
 
+        float initialRetractation = CurrentRetractation;
         duration *= Mathf.Abs(CurrentRetractation - targetRetractation);
         float startTime = Time.time;
         float elapsedTime = 0f;
@@ -160,7 +165,7 @@ public class Limb
         while (elapsedTime < duration)
         {
             elapsedTime = Time.time - startTime;
-            CurrentRetractation = Mathf.Lerp(CurrentRetractation, targetRetractation, elapsedTime / duration);
+            CurrentRetractation = Mathf.Lerp(initialRetractation, targetRetractation, elapsedTime / duration);
             yield return null;
         }
 
@@ -170,9 +175,45 @@ public class Limb
         IsExtending = false;
     }
 
-    //private IEnumerator
+    public IEnumerator FlipKnee(float duration)
+    {
+        IsFlipping = true;
 
-    public bool IsElbowIsInWall(LayerMask layerMask)
+        duration *= FlipCompletion;
+
+        FlipCompletion = 1 - FlipCompletion;
+
+        float initialFlipCompletion = FlipCompletion;
+
+        float startTime = Time.time;
+        float elapsedTime = 0f;
+
+        while (elapsedTime < duration)
+        {
+            elapsedTime = Time.time - startTime;
+            FlipCompletion = Mathf.Lerp(initialFlipCompletion, 1f, elapsedTime / duration);
+            yield return null;
+        }
+
+        FlipCompletion = 1f;
+
+        IsFlipping = false;
+    }
+
+    public Vector3 GetFlippedKneePosition()
+    {
+        Solver.flip = !Solver.flip;
+        Solver.UpdateIK(1f);
+
+        Vector3 position = KneeBone.transform.position;
+
+        Solver.flip = !Solver.flip;
+        Solver.UpdateIK(1f);
+
+        return position;
+    }
+
+    public bool IsKneeInWall(LayerMask layerMask)
     {
         RaycastHit2D hit = Physics2D.Linecast(HipBone.transform.position, KneeBone.transform.position, layerMask);
 
