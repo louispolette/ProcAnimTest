@@ -487,10 +487,10 @@ Camera:
   m_LensShift: {x: 0, y: 0}
   m_NormalizedViewPortRect:
     serializedVersion: 2
-    x: 0
+    x: 0.002034588
     y: 0
-    width: 0.627451
-    height: 0.83623695
+    width: 0.9949135
+    height: 0.9981917
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 34
@@ -996,6 +996,10 @@ PrefabInstance:
       propertyPath: _target
       value: 
       objectReference: {fileID: 234580029}
+    - target: {fileID: 1311629424785403395, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 3377426433073949596, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
       propertyPath: m_Name
       value: Creature
@@ -1042,15 +1046,31 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6286530986277928330, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
       propertyPath: legAmount
-      value: 10
+      value: 30
+      objectReference: {fileID: 0}
+    - target: {fileID: 6286530986277928330, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
+      propertyPath: legLength
+      value: 9
       objectReference: {fileID: 0}
     - target: {fileID: 6286530986277928330, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
       propertyPath: _enableDebug
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6286530986277928330, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
       propertyPath: retractDuration
       value: 0.05
+      objectReference: {fileID: 0}
+    - target: {fileID: 6286530986277928330, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
+      propertyPath: kneeFlipDuration
+      value: 0.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6286530986277928330, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
+      propertyPath: allowFloatingFeet
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6286530986277928330, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
+      propertyPath: footSpacingFromBase
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 6286530986277928330, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
       propertyPath: legLayerMask.m_Bits
@@ -1070,7 +1090,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6286530986277928330, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
       propertyPath: _debugSettings.targetPositions
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6286530986277928330, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
       propertyPath: _debugSettings.floatingPositions

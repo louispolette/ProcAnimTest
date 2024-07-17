@@ -43,6 +43,7 @@ public class Limb
     /// Lerped position in between the limb's length and it's spacing from the base that is used when the limb has no grounded position to step to
     /// </summary>
     public float FloatingDistance { get; set; }
+    public bool IsFloating { get; set; }
 
     /// <summary>
     /// The position that the limb will move to when it is asked to take a step
@@ -54,9 +55,9 @@ public class Limb
     public Vector2 LerpPosition { get; set; }
 
     /// <summary>
-    /// Wether the limb has found a grounded position that it can move to or not
+    /// Wether the limb's lerp position is grounded or not
     /// </summary>
-    public bool HasAvailableGround { get; set; } = false;
+    public bool LerpPositionIsGrounded { get; set; } = false;
     /// <summary>
     /// This value is false when the limb could not find a suitable position and is either retracted or using another limb's target position
     /// </summary>
@@ -125,11 +126,11 @@ public class Limb
     /// <summary>
     /// Moves the limb's lerp position to its target position
     /// </summary>
-    /// <param name="foundGroundedPosition">Wether the position to move to is grounded or not</param>
-    public void MoveLerpPosition(bool foundGroundedPosition)
+    /// <param name="targetPositionIsGrounded">Wether the position to move to is grounded or not</param>
+    public void MoveLerpPosition(bool targetPositionIsGrounded)
     {
         LerpPosition = TargetPosition;
-        HasAvailableGround = foundGroundedPosition;
+        LerpPositionIsGrounded = targetPositionIsGrounded;
     }
 
     public IEnumerator Step(float stepDuration)
@@ -147,6 +148,10 @@ public class Limb
 
             yield return null;
         }
+
+        IKTarget.transform.position = LerpPosition;
+
+        IsFloating = !LerpPositionIsGrounded;
 
         IsStepping = false;
     }
@@ -214,9 +219,26 @@ public class Limb
         return position;
     }
 
+    /// <summary>
+    /// Does a linecast between the hip bone and the knee bone to determine if the later is in/behind a collider
+    /// </summary>
+    /// <param name="layerMask">The layers to take into consideration</param>
+    /// <returns>Wether the knee bone is in/behind a collider or not</returns>
     public bool IsKneeInWall(LayerMask layerMask)
     {
         RaycastHit2D hit = Physics2D.Linecast(HipBone.transform.position, KneeBone.transform.position, layerMask);
+
+        return hit;
+    }
+
+    /// <summary>
+    /// Checks wether the hip bone is in a collider or not
+    /// </summary>
+    /// <param name="layerMask">The layers to take into consideration</param>
+    /// <returns>Wether the hip bone is in a collider or not</returns>
+    public bool IsHipInWall(LayerMask layerMask)
+    {
+        Collider2D hit = Physics2D.OverlapCircle(HipBone.transform.position, 0f, layerMask);
 
         return hit;
     }
