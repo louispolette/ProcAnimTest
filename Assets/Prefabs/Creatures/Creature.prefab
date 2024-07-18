@@ -98,16 +98,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5d787e55d1d059642bd0eea3bcfb2195, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  legLength: 8
-  footSpacingFromBody: 3
+  legLength: 9
+  footSpacingFromBase: 3
+  allowFloatingFeet: 0
   footFloatingDistance: 0.5
   footPlacementRange: 1
   stepDuration: 0.05
+  kneeFlipDuration: 0.1
+  retractDuration: 0.05
   legLayerMask:
     serializedVersion: 2
     m_Bits: 64
   limbBase: {fileID: 7090699460722082573}
-  legAmount: 20
+  legAmount: 30
   solversParent: {fileID: 1550352268150661577}
   targetsParent: {fileID: 5139737147527586932}
   rendererParent: {fileID: 5026908615720586164}
@@ -118,12 +121,12 @@ MonoBehaviour:
     flip: 0
   _enableDebug: 1
   _debugSettings:
-    bones: 1
+    bones: 0
     raycasts: 0
-    footBodySpacing: 1
-    legLength: 1
-    floatingPositions: 1
-    footPlacementRange: 1
+    footSpacingFromBase: 0
+    legLength: 0
+    floatingPositions: 0
+    footPlacementRange: 0
     lerpPositions: 1
     targetPositions: 1
 --- !u!114 &3766422308475223437

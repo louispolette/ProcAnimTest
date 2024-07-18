@@ -20,7 +20,7 @@ public class PlayerController : MonoBehaviour
     {
         if (horizontalInput != 0)
         {
-            rb.position += Vector2.right * horizontalInput * speed * Time.deltaTime;
+            rb.AddForce(Vector2.right * horizontalInput * speed, ForceMode2D.Force);
         }
     }
 

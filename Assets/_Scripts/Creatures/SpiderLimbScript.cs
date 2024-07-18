@@ -238,6 +238,8 @@ public class SpiderLimbScript : MonoBehaviour
                     {
                         Debug.Log("Knee clipping : Relocated");
 
+                        // FIND OUT WHY THE LEGS DON'T RELOCATE WHEN KNEES ARE CLIPPING
+
                         limb.TargetPosition = foundLimb.TargetPosition;
                         foundTargetPositionIsGrounded = foundLimb.LerpPositionIsGrounded;
                         limb.IsInIdealPosition = false;
