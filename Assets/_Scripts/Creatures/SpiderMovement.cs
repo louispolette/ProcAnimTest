@@ -5,7 +5,8 @@ using Random = UnityEngine.Random;
 
 public class SpiderMovement : MonoBehaviour
 {
-    [SerializeField] private Transform _target;
+    [SerializeField] private SpiderMovementMode _movementMode = SpiderMovementMode.MoveTowardsTranform;
+    [SerializeField] private Transform _targetTransform;
 
     [Header("Movement Parameters")]
 
@@ -23,42 +24,100 @@ public class SpiderMovement : MonoBehaviour
 
     [SerializeField] private bool _enableDebug = false;
 
-    private Vector3 _nextPosition;
-    private Vector3 _smoothVelocity;
-    private Coroutine _stepUpdater;
+    private Camera _camera;
 
-    private void Start()
+    private Vector2 _targetStep;
+    private Vector2 _smoothVelocity;
+    private Vector2 _lastClickedPosition;
+    private Coroutine _stepUpdater;
+    private float _stepPositionUpdateTimer;
+    private float _nextstepPositionUpdate;
+
+    private Vector2 TargetPosition
     {
-        _stepUpdater = StartCoroutine(UpdateNextPosition());
+        get
+        {
+            switch (_movementMode)
+            {
+                case SpiderMovementMode.MoveTowardsTranform:
+                    return _targetTransform.position;
+                case SpiderMovementMode.FollowClick:
+                    return _lastClickedPosition;
+                default:
+                    return transform.position;
+            }
+        }
+    }
+
+    private Camera Camera
+    {
+        get
+        {
+            if (_camera == null)
+            {
+                _camera = Camera.main;
+            }
+
+            return _camera;
+        }
+    }
+
+    private enum SpiderMovementMode
+    {
+        None,
+        MoveTowardsTranform,
+        FollowClick
     }
 
     private void Update()
     {
-        transform.position = Vector3.SmoothDamp(transform.position, _nextPosition, ref _smoothVelocity, 1f / _speed);
+        if (_movementMode == SpiderMovementMode.FollowClick)
+        {
+            HandleClicks();
+        }
+
+        HandleStepFinding();
+        Move();
     }
 
-    private Vector3 GetNextPosition()
+    private void Move()
     {
-        Vector3 direction = (_target.position - transform.position).normalized;
-        Vector3 deviatedDir = Quaternion.AngleAxis(Random.Range(-_deviationRange / 2, _deviationRange / 2), Vector3.forward) * direction;
+        transform.position = Vector2.SmoothDamp(transform.position, _targetStep, ref _smoothVelocity, 1f / _speed);
+    }
+
+    private void HandleClicks()
+    {
+        if (Input.GetMouseButtonDown(0))
+        {
+            _lastClickedPosition = Camera.ScreenToWorldPoint(Input.mousePosition);
+        }
+    }
+
+    private void HandleStepFinding()
+    {
+        if (_stepPositionUpdateTimer >= _nextstepPositionUpdate)
+        {
+            _targetStep = GetStepTowardsTarget();
+            _stepPositionUpdateTimer = 0;
+            _nextstepPositionUpdate = Mathf.Max(0f, Random.Range(_stepUpdateFrequency - _stepFrequencyRange / 2,
+                                                                 _stepUpdateFrequency + _stepFrequencyRange / 2));
+        }
+
+        _stepPositionUpdateTimer += Time.deltaTime;
+    }
+
+    private Vector2 GetStepTowardsTarget()
+    {
+        float randomDeviationAngle = Random.Range(-_deviationRange / 2, _deviationRange / 2);
+        Vector2 baseDirection = (TargetPosition - (Vector2)transform.position).normalized;
+        Vector2 deviatedDir = Quaternion.AngleAxis(randomDeviationAngle, Vector3.forward) * baseDirection;
 
         float randomMaxDist = Random.Range(Mathf.Max(0, _stepDistance - _stepDistanceRange), _stepDistance + _stepDistanceRange);
-        float distance = Mathf.Min(Vector2.Distance(transform.position, _target.position), randomMaxDist);
+        float stepDistance = Mathf.Min(Vector2.Distance(transform.position, _targetTransform.position), randomMaxDist);
 
-        Vector3 position = deviatedDir * distance;
+        Vector3 stepPosition = deviatedDir * stepDistance;
 
-        return transform.position + position;
-    }
-
-    private IEnumerator UpdateNextPosition()
-    {
-        while (true)
-        {
-            _nextPosition = GetNextPosition();
-
-            yield return new WaitForSeconds(Random.Range(_stepUpdateFrequency - _stepFrequencyRange / 2,
-                                                         _stepUpdateFrequency + _stepFrequencyRange / 2));
-        }
+        return transform.position + stepPosition;
     }
 
     private void OnDrawGizmos()
@@ -66,6 +125,9 @@ public class SpiderMovement : MonoBehaviour
         if (!_enableDebug) return;
 
         Gizmos.color = Color.yellow;
-        Gizmos.DrawSphere(_nextPosition, 0.25f);
+        Gizmos.DrawSphere(_targetStep, 0.25f);
+
+        Gizmos.color = Color.red;
+        Gizmos.DrawSphere(TargetPosition, 0.40f);
     }
 }

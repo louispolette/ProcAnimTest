@@ -6,7 +6,7 @@ using UnityEngine.U2D.IK;
 using UnityEngine.UIElements;
 using Random = UnityEngine.Random;
 
-public class SpiderLimbScript : MonoBehaviour
+public class SpiderLimbHandler : MonoBehaviour
 {
     #region serialized
 
@@ -124,6 +124,20 @@ public class SpiderLimbScript : MonoBehaviour
 
     #endregion
 
+    #region
+
+    public enum LimbStepContext
+    {
+        None,
+        TooFar,
+        TooClose,
+        Clipping,
+        FoundBetterPosition,
+        Unspecified
+    }
+
+    #endregion
+
     private void Awake()
     {
         _IKManager = GetComponentInChildren<IKManager2D>();
@@ -153,8 +167,6 @@ public class SpiderLimbScript : MonoBehaviour
     {
         foreach (Limb limb in _limbs)
         {
-            limb.IsInIdealPosition = false;
-
             if (limb.IsHipInWall(legLayerMask))
             {
                 limb.HasNoValidPosition = true; // Limb is immediatly considered invalid if the hip is in a wall
@@ -167,7 +179,7 @@ public class SpiderLimbScript : MonoBehaviour
 
             #region handle target position
 
-            bool hasFoundBetterPosition = false; // The limb was either using another limb's position or was floating and found available ground
+            bool limbFoundBetterPosition = false; // If false, the limb was either using another limb's position or was floating and found available ground
 
             bool foundtargetPosition = true; // Wether the limb has found a target position this frame or not
             bool foundTargetPositionIsGrounded = false; // Wether the found target position is grounded or not
@@ -177,24 +189,25 @@ public class SpiderLimbScript : MonoBehaviour
 
             if (_enableDebug && _debugSettings.raycasts) Debug.DrawLine(ray.origin, ray.GetPoint(limb.Length), Color.magenta);
 
-            if (hit) // The limb has found a ground to attach to
+            if (hit) // The limb has found ground to attach to
             {
                 foundTargetPositionIsGrounded = true;
-
                 limb.TargetPosition = hit.point;
 
                 if (!limb.LerpPositionIsGrounded || !limb.IsInIdealPosition) // Immediatly move to the found position if limb is not in ideal position
                 {
-                    limb.IsInIdealPosition = true;
-                    hasFoundBetterPosition = true;
+                    limbFoundBetterPosition = true;
                 }
+
+                limb.IsInIdealPosition = true;
             }
             else if (allowFloatingFeet) // No ground found but we're allowed to have floating feet
             {
-                limb.IsInIdealPosition = true;
                 float baseDist = Mathf.Lerp(limb.SpacingFromBase, limb.Length, footFloatingDistance);
                 float randomizedDist = baseDist + Random.Range(limb.SpacingFromBase - baseDist, limb.Length - baseDist) * footPlacementRange;
                 limb.TargetPosition = ray.GetPoint(randomizedDist);
+
+                limb.IsInIdealPosition = true;
             }
             else // We try to attach to another limb's position
             {
@@ -203,16 +216,15 @@ public class SpiderLimbScript : MonoBehaviour
 
                 if (foundLimb != null)
                 {
-                    Debug.Log("No position found : Relocating");
-
                     limb.TargetPosition = foundLimb.TargetPosition;
                     foundTargetPositionIsGrounded = true;
                 }
                 else
                 {
                     limb.HasNoValidPosition = true;
-                    Debug.Log("No position found : Retracting");
                 }
+
+                limb.IsInIdealPosition = false;
             }
 
             #endregion
@@ -220,7 +232,7 @@ public class SpiderLimbScript : MonoBehaviour
             #region handle knee clipping
 
             bool kneeIsClipping = false; // Wether the limb's knee bone is clipping in a wall this frame or not
-            bool stuckRelocate = false; // True when the limb needs to relocate beacause it's knee is in a wall and cannot flip to fix it
+            bool limbStuck = false; // True when the limb needs to relocate beacause it's knee is in a wall and cannot flip to fix it
 
             if (limb.IsKneeInWall(legLayerMask) && !limb.IsStepping) // Flip elbow if it is in a wall
             {
@@ -236,18 +248,13 @@ public class SpiderLimbScript : MonoBehaviour
 
                     if (foundLimb != null)
                     {
-                        Debug.Log("Knee clipping : Relocated");
-
                         // FIND OUT WHY THE LEGS DON'T RELOCATE WHEN KNEES ARE CLIPPING
 
                         limb.TargetPosition = foundLimb.TargetPosition;
                         foundTargetPositionIsGrounded = foundLimb.LerpPositionIsGrounded;
+                        limbStuck = true;
+
                         limb.IsInIdealPosition = false;
-                        stuckRelocate = true;
-                    }
-                    else
-                    {
-                        Debug.Log("Knee clipping : Retracting");
                     }
                 }
             }
@@ -259,32 +266,35 @@ public class SpiderLimbScript : MonoBehaviour
                 limb.HasNoValidPosition = true; // The limb is either clipping into a wall or couldn't find a target position and couldn't use another limb's position
             }
 
-            bool limbOverExtended = Vector2.Distance(limb.HipBone.transform.position, limb.LerpPosition) > limb.Length;
+            bool limbTooFar = Vector2.Distance(limb.HipBone.transform.position, limb.LerpPosition) > limb.Length;
             bool limbTooClose = limb.IsFloating && Vector2.Distance(limb.LerpPosition, limbBase.transform.position) < footSpacingFromBase;
 
             #region handle stepping
 
+            LimbStepContext stepContext = LimbStepContext.None;
+
             // The limb will move under one of the following conditions :
 
-            if (limbOverExtended) // The limb cannot extend further
+            if (limbTooFar) // The limb cannot extend further
             {
-                Debug.Log("Step : Limb over-extended");
-                MoveLimb(limb, foundTargetPositionIsGrounded, allowStepCancel : true);
+                stepContext = LimbStepContext.TooFar;
             }
             else if (limbTooClose) // The limb's lerp position is too close to the body, only if the limb is floating
             {
-                Debug.Log("Step : Limb too close");
-                MoveLimb(limb, foundTargetPositionIsGrounded, allowStepCancel : false);
+                stepContext = LimbStepContext.TooClose;
             }
-            else if (stuckRelocate) // The limb's knee is stuck in a wall and cannot flip it to fix it
+            else if (limbStuck) // The limb's knee is stuck in a wall and is forced to take another leg's position
             {
-                Debug.Log("Step : Knee in wall");
-                MoveLimb(limb, foundTargetPositionIsGrounded, allowStepCancel : false);
+                stepContext = LimbStepContext.Clipping;
             }
-            else if (hasFoundBetterPosition) // The limb has found a better position than it's current one
+            else if (limbFoundBetterPosition) // The limb has found a better position than it's current one
             {
-                Debug.Log("Step : Found better position");
-                MoveLimb(limb, foundTargetPositionIsGrounded, allowStepCancel: false);
+                stepContext = LimbStepContext.FoundBetterPosition;
+            }
+
+            if (stepContext != LimbStepContext.None)
+            {
+                MoveLimb(limb, foundTargetPositionIsGrounded, stepContext);
             }
 
             #endregion
@@ -304,11 +314,12 @@ public class SpiderLimbScript : MonoBehaviour
     /// <param name="limb">The limb that will take a step</param>
     /// <param name="targetPositionIsGrounded">Wether the current target position is grounded or not</param>
     /// <param name="allowStepCancel">Wether the limb is allowed to cancel a step if one is already happening or not</param>
-    private void MoveLimb(Limb limb, bool targetPositionIsGrounded = false, bool allowStepCancel = false)
+    private void MoveLimb(Limb limb, bool targetPositionIsGrounded, LimbStepContext context = LimbStepContext.Unspecified)
     {
+        
         limb.MoveLerpPosition(targetPositionIsGrounded);
 
-        if (limb.IsStepping && !allowStepCancel) return; // Stop here if a step is happening and we're not allowed to cancel it
+        if (limb.IsStepping && context != LimbStepContext.TooFar) return; // Stop here if a step is happening and we're not allowed to cancel it
 
         if (limb.StepCoroutine != null)
         {

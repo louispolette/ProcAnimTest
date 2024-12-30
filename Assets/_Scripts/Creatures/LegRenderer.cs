@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class LegRenderer : MonoBehaviour
 {
-    private SpiderLimbScript _limbScript;
+    private SpiderLimbHandler _limbScript;
 
     private List<Limb> _limbs;
 
@@ -20,7 +20,7 @@ public class LegRenderer : MonoBehaviour
 
     private void Awake()
     {
-        _limbScript = GetComponent<SpiderLimbScript>();
+        _limbScript = GetComponent<SpiderLimbHandler>();
     }
 
     private void OnEnable()

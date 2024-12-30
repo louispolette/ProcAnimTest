@@ -46,7 +46,7 @@ public class Limb
     public bool IsFloating { get; set; }
 
     /// <summary>
-    /// The position that the limb will move to when it is asked to take a step
+    /// The position that the limb will move to next time it is asked to take a step
     /// </summary>
     public Vector2 TargetPosition { get; set; }
     /// <summary>
@@ -67,6 +67,9 @@ public class Limb
     /// </summary>
     public bool IsStepping { get; protected set; } = false;
     public Coroutine StepCoroutine { get; set; }
+    /// <summary>
+    /// True if the limb cannot place itself in a correct way
+    /// </summary>
     public bool HasNoValidPosition { get; set; } = false;
     /// <summary>
     /// Wether the limb is in the middle of hiding or not

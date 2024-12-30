@@ -78,10 +78,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3acbfb5c163225847ae6108db3368d1f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _target: {fileID: 0}
-  _speed: 7.5
+  _movementMode: 1
+  _targetTransform: {fileID: 0}
+  _speed: 5
   _stepDistance: 1.5
-  _stepUpdateFrequency: 0.05
+  _stepUpdateFrequency: 0.25
   _stepFrequencyRange: 0.5
   _stepDistanceRange: 0.25
   _deviationRange: 120
