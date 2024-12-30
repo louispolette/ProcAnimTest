@@ -163,7 +163,7 @@ public class SpiderLimbHandler : MonoBehaviour
 
     #region movement
 
-    private void Update()
+    private void FixedUpdate()
     {
         foreach (Limb limb in _limbs)
         {
@@ -316,7 +316,6 @@ public class SpiderLimbHandler : MonoBehaviour
     /// <param name="allowStepCancel">Wether the limb is allowed to cancel a step if one is already happening or not</param>
     private void MoveLimb(Limb limb, bool targetPositionIsGrounded, LimbStepContext context = LimbStepContext.Unspecified)
     {
-        
         limb.MoveLerpPosition(targetPositionIsGrounded);
 
         if (limb.IsStepping && context != LimbStepContext.TooFar) return; // Stop here if a step is happening and we're not allowed to cancel it

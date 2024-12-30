@@ -765,6 +765,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1107099375694141551, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
+      propertyPath: m_Mass
+      value: 0.01
+      objectReference: {fileID: 0}
+    - target: {fileID: 1107099375694141551, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
+      propertyPath: m_CollisionDetection
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 1311629424785403395, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
       propertyPath: m_Enabled
       value: 1
@@ -775,7 +783,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1311629424785403395, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
       propertyPath: _movementMode
-      value: 2
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1311629424785403395, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
       propertyPath: _targetTransform
