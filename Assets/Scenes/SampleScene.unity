@@ -135,7 +135,7 @@ GameObject:
   - component: {fileID: 413365786}
   - component: {fileID: 413365788}
   m_Layer: 6
-  m_Name: Square (3)
+  m_Name: WallLeft
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -183,7 +183,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
-  m_Color: {r: 0.253471, g: 0.32942718, b: 0.6037736, a: 1}
+  m_Color: {r: 0.023529414, g: 0.023529414, b: 0.03137255, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -265,7 +265,7 @@ GameObject:
   - component: {fileID: 443095524}
   - component: {fileID: 443095526}
   m_Layer: 6
-  m_Name: Square (1)
+  m_Name: Ceiling
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -313,7 +313,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
-  m_Color: {r: 0.253471, g: 0.32942718, b: 0.6037736, a: 1}
+  m_Color: {r: 0.023529414, g: 0.023529414, b: 0.03137255, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -465,7 +465,7 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 2
-  m_BackGroundColor: {r: 0.9811321, g: 0.9811321, b: 0.9811321, a: 0}
+  m_BackGroundColor: {r: 0.103773594, g: 0.103773594, b: 0.103773594, a: 0}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
@@ -639,7 +639,7 @@ GameObject:
   - component: {fileID: 729190839}
   - component: {fileID: 729190841}
   m_Layer: 6
-  m_Name: Square
+  m_Name: Ground
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -687,7 +687,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
-  m_Color: {r: 0.253471, g: 0.32942718, b: 0.6037736, a: 1}
+  m_Color: {r: 0.023529414, g: 0.023529414, b: 0.03137255, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -767,7 +767,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1107099375694141551, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
       propertyPath: m_Mass
-      value: 0.01
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1107099375694141551, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
+      propertyPath: m_GravityScale
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1107099375694141551, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
       propertyPath: m_CollisionDetection
@@ -779,16 +783,28 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1311629424785403395, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
       propertyPath: _enableDebug
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1311629424785403395, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
       propertyPath: _movementMode
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1311629424785403395, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
+      propertyPath: _movementSpeed
+      value: 30
+      objectReference: {fileID: 0}
+    - target: {fileID: 1311629424785403395, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
+      propertyPath: _standingForce
+      value: 20
+      objectReference: {fileID: 0}
+    - target: {fileID: 1311629424785403395, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
       propertyPath: _targetTransform
       value: 
       objectReference: {fileID: 1423229134}
+    - target: {fileID: 1311629424785403395, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
+      propertyPath: _gravityResistForce
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 3377426433073949596, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
       propertyPath: m_Name
       value: Creature
@@ -837,6 +853,22 @@ PrefabInstance:
       propertyPath: legAmount
       value: 8
       objectReference: {fileID: 0}
+    - target: {fileID: 6286530986277928330, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
+      propertyPath: _enableDebug
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6286530986277928330, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
+      propertyPath: _debugSettings.lerpPositions
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6286530986277928330, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
+      propertyPath: _debugSettings.targetPositions
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6286530986277928330, guid: c7561a4ae7a33d143acb1b52f1e62fca, type: 3}
+      propertyPath: _debugSettings.averageLimbPosition
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -859,7 +891,7 @@ GameObject:
   - component: {fileID: 1629803860}
   - component: {fileID: 1629803862}
   m_Layer: 6
-  m_Name: Square (2)
+  m_Name: WallRight
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -907,7 +939,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
-  m_Color: {r: 0.253471, g: 0.32942718, b: 0.6037736, a: 1}
+  m_Color: {r: 0.023529414, g: 0.023529414, b: 0.03137255, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -1030,15 +1062,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5392894966135223832, guid: 9f1e772dc2ed07043b29ce918ea90c5c, type: 3}
       propertyPath: m_Color.b
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5392894966135223832, guid: 9f1e772dc2ed07043b29ce918ea90c5c, type: 3}
       propertyPath: m_Color.g
-      value: 0.509434
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5392894966135223832, guid: 9f1e772dc2ed07043b29ce918ea90c5c, type: 3}
       propertyPath: m_Color.r
-      value: 0.003918738
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5883540459917183371, guid: 9f1e772dc2ed07043b29ce918ea90c5c, type: 3}
       propertyPath: m_LocalPosition.x

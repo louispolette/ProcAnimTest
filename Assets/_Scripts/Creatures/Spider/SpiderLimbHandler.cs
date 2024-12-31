@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Unity.PlasticSCM.Editor.WebApi;
 using UnityEngine;
 using UnityEngine.U2D.IK;
@@ -86,14 +87,18 @@ public class SpiderLimbHandler : MonoBehaviour
         public bool flip = false;
     }
 
+    [Header("Audio")]
+
+    [SerializeField] private AudioClip[] _stepSFX;
+
     [Header("Debug")]
 
     [SerializeField] private bool _enableDebug = false;
 
-    [SerializeField] private debugSettings _debugSettings;
+    [SerializeField] private DebugSettings _debugSettings;
 
     [Serializable]
-    private struct debugSettings
+    private struct DebugSettings
     {
         public bool bones;
         public bool raycasts;
@@ -103,6 +108,7 @@ public class SpiderLimbHandler : MonoBehaviour
         public bool footPlacementRange;
         public bool lerpPositions;
         public bool targetPositions;
+        public bool averageLimbPosition;
     }
 
     #endregion
@@ -112,6 +118,7 @@ public class SpiderLimbHandler : MonoBehaviour
     public List<Limb> _limbs { get; private set; } = new List<Limb>();
 
     private IKManager2D _IKManager;
+    private AudioSource _audioSource;
 
     private Bone[] _bones;
 
@@ -119,8 +126,8 @@ public class SpiderLimbHandler : MonoBehaviour
     public event OnLimbsSetupDone onLimbsSetupDone;
 
     private List<Limb> _searchList = new List<Limb>();
-
     private List<Limb> _validLimbsList = new List<Limb>();
+    private List<Vector2> _limbPositionsTemp = new List<Vector2>();
 
     #endregion
 
@@ -141,6 +148,7 @@ public class SpiderLimbHandler : MonoBehaviour
     private void Awake()
     {
         _IKManager = GetComponentInChildren<IKManager2D>();
+        _audioSource = GetComponentInChildren<AudioSource>();
 
         #region warning logs
 
@@ -298,10 +306,16 @@ public class SpiderLimbHandler : MonoBehaviour
             }
 
             #endregion
+        }
+    }
 
+    private void LateUpdate()
+    {
+        foreach (Limb limb in _limbs)
+        {
             // Keep foot in position when the limb isn't stepping :
 
-            if (!limb.IsStepping) 
+            if (!limb.IsStepping)
             {
                 limb.IKTarget.transform.position = limb.LerpPosition;
             }
@@ -521,7 +535,14 @@ public class SpiderLimbHandler : MonoBehaviour
         newLimb.SpacingFromBase = this.footSpacingFromBase;
         newLimb.FloatingDistance = this.footFloatingDistance;
 
+        SetupLimbCallbacks(newLimb);
+
         return newLimb;
+    }
+
+    private void SetupLimbCallbacks(Limb limb)
+    {
+        limb.onStepEnd += PlayStepSFX;
     }
 
     /// <summary>
@@ -627,6 +648,37 @@ public class SpiderLimbHandler : MonoBehaviour
 
     #endregion
 
+    private void PlayStepSFX()
+    {
+        int randomSFXindex = Random.Range(0, _stepSFX.Length);
+        _audioSource.PlayOneShot(_stepSFX[randomSFXindex]);
+    }
+
+    public Vector2[] GetLimbPositions()
+    {
+        _limbPositionsTemp.Clear();
+
+        foreach (Limb limb in _limbs)
+        {
+            _limbPositionsTemp.Add(limb.FootBone.transform.position);
+        }
+
+        return _limbPositionsTemp.ToArray();
+    }
+
+    public Vector2 GetAverageLimbPosition()
+    {
+        Vector2[] limbPositions = GetLimbPositions();
+        Vector2 positionSum = new Vector2();
+
+        foreach (Vector2 position in limbPositions)
+        {
+            positionSum += position;
+        }
+
+        return positionSum / limbPositions.Length;
+    }
+
     private void OnDrawGizmos()
     {
         if (!_enableDebug) return;
@@ -710,6 +762,12 @@ public class SpiderLimbHandler : MonoBehaviour
             {
                 Gizmos.DrawSphere(b.transform.position, 0.2f);
             }
+        }
+
+        if (_debugSettings.averageLimbPosition)
+        {
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawSphere(GetAverageLimbPosition(), 1f);
         }
     }
 }

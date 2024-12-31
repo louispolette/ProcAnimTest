@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class LegRenderer : MonoBehaviour
+public class SpiderLegRenderer : MonoBehaviour
 {
     private SpiderLimbHandler _limbScript;
 
@@ -38,7 +38,7 @@ public class LegRenderer : MonoBehaviour
         _limbs = _limbScript._limbs;
     }
 
-    private void Update()
+    private void FixedUpdate()
     {
         foreach (Limb limb in _limbs)
         {

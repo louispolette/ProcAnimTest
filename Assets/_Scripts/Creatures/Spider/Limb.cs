@@ -83,6 +83,9 @@ public class Limb
     /// The progress of the limb being hidden or not. 0 is visible and 1 is fully hidden
     /// </summary>
     public float CurrentRetractation { get; protected set; } = 0f;
+
+    public delegate void OnStepEnd();
+    public OnStepEnd onStepEnd;
     public Coroutine RetractCoroutine { get; set; }
 
     public bool IsFlipping {  get; protected set; } = false;
@@ -157,6 +160,7 @@ public class Limb
         IsFloating = !LerpPositionIsGrounded;
 
         IsStepping = false;
+        onStepEnd.Invoke();
     }
 
     public IEnumerator RetractLimb(float duration, float targetRetractation)

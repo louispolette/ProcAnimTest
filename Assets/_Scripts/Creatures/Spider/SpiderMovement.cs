@@ -5,17 +5,23 @@ using Random = UnityEngine.Random;
 
 public class SpiderMovement : MonoBehaviour
 {
-    [SerializeField] private SpiderMovementMode _movementMode = SpiderMovementMode.MoveTowardsTranform;
+    [Header("Pathfinding")]
+
+    [SerializeField] private SpiderBehavior _currentBehavior = SpiderBehavior.MoveTowardsTranform;
     [SerializeField] private Transform _targetTransform;
+
+    [Space]
+
+    [SerializeField] private float _stoppingDistance = 2f;
 
     [Header("Movement Parameters")]
 
     [SerializeField, Min(0)] private float _movementSpeed = 1.0f;
-    [SerializeField, Range(0f, 1f)] private float _gravityResistForce = 1f;
+    [SerializeField, Min(0)] private float _standingForce = 1f;
     [SerializeField, Min(0)] private float _stepDistance = 0.5f;
     [SerializeField, Min(0)] private float _stepUpdateFrequency = 1f;
     
-    [Header("Randomness Settings")]
+    [Header("Movement Tweaks")]
 
     [SerializeField, Min(0)] private float _stepFrequencyRange = 1f;
     [SerializeField, Min(0)] private float _stepDistanceRange = 1f;
@@ -27,24 +33,25 @@ public class SpiderMovement : MonoBehaviour
 
     private Rigidbody2D _rb;
     private Camera _camera;
+    private SpiderLimbHandler _limbHandler;
 
     private Vector2 _targetStepPosition;
-    private Vector2 _smoothVelocity;
-    private Vector2 _previousVelocity;
     private Vector2 _lastClickedPosition;
-    private Coroutine _stepUpdater;
+
     private float _stepPositionUpdateTimer;
     private float _nextstepPositionUpdate;
 
-    private Vector2 TargetPosition
+    private bool _hasReachedDestination = false;
+
+    public Vector2 DestinationPosition
     {
         get
         {
-            switch (_movementMode)
+            switch (_currentBehavior)
             {
-                case SpiderMovementMode.MoveTowardsTranform:
+                case SpiderBehavior.MoveTowardsTranform:
                     return _targetTransform.position;
-                case SpiderMovementMode.FollowClick:
+                case SpiderBehavior.FollowClick:
                     return _lastClickedPosition;
                 default:
                     return transform.position;
@@ -65,7 +72,7 @@ public class SpiderMovement : MonoBehaviour
         }
     }
 
-    private enum SpiderMovementMode
+    private enum SpiderBehavior
     {
         None,
         MoveTowardsTranform,
@@ -75,11 +82,12 @@ public class SpiderMovement : MonoBehaviour
     private void Awake()
     {
         _rb = GetComponent<Rigidbody2D>();
+        _limbHandler = GetComponent<SpiderLimbHandler>();
     }
 
     private void Update()
     {
-        if (_movementMode == SpiderMovementMode.FollowClick)
+        if (_currentBehavior == SpiderBehavior.FollowClick)
         {
             HandleClicks();
         }
@@ -87,21 +95,22 @@ public class SpiderMovement : MonoBehaviour
 
     private void FixedUpdate()
     {
-        HandleStepFinding();
+        CheckIfDestinationReached();
+        HandleStepUpdate();
         Move();
-
-        _previousVelocity = _rb.velocity;
     }
 
     private void Move()
     {
-        //transform.position = Vector2.SmoothDamp(transform.position, _targetStep, ref _smoothVelocity, 1f / _speed);
-
         _rb.AddForce(GetAccelForce());
         _rb.AddForce(GetBrakeForce());
-        _rb.velocity += -Physics2D.gravity * Time.deltaTime * _gravityResistForce;
+        _rb.AddForce(GetStandingForce());
     }
 
+    private Vector2 GetStandingForce()
+    {
+        return (_limbHandler.GetAverageLimbPosition() - _rb.position).normalized * _standingForce;
+    }
 
     private Vector2 GetAccelForce()
     {
@@ -134,8 +143,15 @@ public class SpiderMovement : MonoBehaviour
         }
     }
 
-    private void HandleStepFinding()
+    private void CheckIfDestinationReached()
     {
+        _hasReachedDestination = Vector2.Distance(_rb.position, DestinationPosition) <= _stoppingDistance;
+    }
+
+    private void HandleStepUpdate()
+    {
+        if (_hasReachedDestination) return;
+
         if (_stepPositionUpdateTimer >= _nextstepPositionUpdate)
         {
             _targetStepPosition = GetStepTowardsTarget();
@@ -150,7 +166,7 @@ public class SpiderMovement : MonoBehaviour
     private Vector2 GetStepTowardsTarget()
     {
         float randomDeviationAngle = Random.Range(-_deviationRange / 2, _deviationRange / 2);
-        Vector2 baseDirection = (TargetPosition - (Vector2)transform.position).normalized;
+        Vector2 baseDirection = (DestinationPosition - (Vector2)transform.position).normalized;
         Vector2 deviatedDir = Quaternion.AngleAxis(randomDeviationAngle, Vector3.forward) * baseDirection;
 
         float randomMaxDist = Random.Range(Mathf.Max(0, _stepDistance - _stepDistanceRange), _stepDistance + _stepDistanceRange);
@@ -165,10 +181,10 @@ public class SpiderMovement : MonoBehaviour
     {
         if (!_enableDebug) return;
 
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(DestinationPosition, _stoppingDistance);
+
         Gizmos.color = Color.yellow;
         Gizmos.DrawSphere(_targetStepPosition, 0.25f);
-
-        Gizmos.color = Color.red;
-        Gizmos.DrawSphere(TargetPosition, 0.40f);
     }
 }
