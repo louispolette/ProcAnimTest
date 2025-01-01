@@ -115,7 +115,7 @@ public class SpiderLimbHandler : MonoBehaviour
 
     #region not serialized
 
-    public List<Limb> _limbs { get; private set; } = new List<Limb>();
+    public List<Limb> Limbs { get; private set; } = new List<Limb>();
 
     private IKManager2D _IKManager;
     private AudioSource _audioSource;
@@ -140,6 +140,7 @@ public class SpiderLimbHandler : MonoBehaviour
         TooClose,
         Clipping,
         FoundBetterPosition,
+        ForcedToMove,
         Unspecified
     }
 
@@ -169,140 +170,191 @@ public class SpiderLimbHandler : MonoBehaviour
         onLimbsSetupDone?.Invoke();
     }
 
-    #region movement
-
     private void FixedUpdate()
     {
-        foreach (Limb limb in _limbs)
+        foreach (Limb limb in Limbs)
         {
-            if (limb.IsHipInWall(legLayerMask))
-            {
-                limb.HasNoValidPosition = true; // Limb is immediatly considered invalid if the hip is in a wall
-                continue;
-            }
-            else
-            {
-                limb.HasNoValidPosition = false;
-            }
+            if (CheckIfHipInWall()) continue;
 
-            #region handle target position
-
+            bool foundtargetPosition;
+            bool foundTargetPositionIsGrounded; // Wether the found target position is grounded or not
             bool limbFoundBetterPosition = false; // If false, the limb was either using another limb's position or was floating and found available ground
+            
+            bool kneeIsClipping; // Wether the limb's knee bone is clipping in a wall this frame or not
+            bool limbHasToRelocate = false; // True when the limb needs to relocate beacause it's knee is in a wall and cannot flip to fix it
 
-            bool foundtargetPosition = true; // Wether the limb has found a target position this frame or not
-            bool foundTargetPositionIsGrounded = false; // Wether the found target position is grounded or not
+            bool limbTooFar;
+            bool limbTooClose;
+            bool limbForcedToMove;
 
-            Ray2D ray = new Ray2D(limb.HipBone.transform.position, limb.Direction);
-            RaycastHit2D hit = Physics2D.Raycast(ray.origin, ray.direction, limb.Length, legLayerMask);
+            Ray2D ray;
+            RaycastHit2D hit;
 
-            if (_enableDebug && _debugSettings.raycasts) Debug.DrawLine(ray.origin, ray.GetPoint(limb.Length), Color.magenta);
+            DoRaycast();
 
-            if (hit) // The limb has found ground to attach to
-            {
-                foundTargetPositionIsGrounded = true;
-                limb.TargetPosition = hit.point;
-
-                if (!limb.LerpPositionIsGrounded || !limb.IsInIdealPosition) // Immediatly move to the found position if limb is not in ideal position
-                {
-                    limbFoundBetterPosition = true;
-                }
-
-                limb.IsInIdealPosition = true;
-            }
-            else if (allowFloatingFeet) // No ground found but we're allowed to have floating feet
-            {
-                float baseDist = Mathf.Lerp(limb.SpacingFromBase, limb.Length, footFloatingDistance);
-                float randomizedDist = baseDist + Random.Range(limb.SpacingFromBase - baseDist, limb.Length - baseDist) * footPlacementRange;
-                limb.TargetPosition = ray.GetPoint(randomizedDist);
-
-                limb.IsInIdealPosition = true;
-            }
-            else // We try to attach to another limb's position
-            {
-                Limb foundLimb = SearchValidNeighborLimb(limb); // Tries to find a limb with a valid position so it can copy its target position
-                foundtargetPosition = foundLimb != null;
-
-                if (foundLimb != null)
-                {
-                    limb.TargetPosition = foundLimb.TargetPosition;
-                    foundTargetPositionIsGrounded = true;
-                }
-                else
-                {
-                    limb.HasNoValidPosition = true;
-                }
-
-                limb.IsInIdealPosition = false;
-            }
-
-            #endregion
-
-            #region handle knee clipping
-
-            bool kneeIsClipping = false; // Wether the limb's knee bone is clipping in a wall this frame or not
-            bool limbStuck = false; // True when the limb needs to relocate beacause it's knee is in a wall and cannot flip to fix it
-
-            if (limb.IsKneeInWall(legLayerMask) && !limb.IsStepping) // Flip elbow if it is in a wall
-            {
-                FlipLimb(limb);
-                limb.Solver.UpdateIK(1f);
-
-                if (limb.IsKneeInWall(legLayerMask)) // Check again after flip
-                {
-                    FlipLimb(limb); // Flip back
-
-                    Limb foundLimb = SearchValidNeighborLimb(limb);
-                    kneeIsClipping = foundLimb == null;
-
-                    if (foundLimb != null)
-                    {
-                        // FIND OUT WHY THE LEGS DON'T RELOCATE WHEN KNEES ARE CLIPPING
-
-                        limb.TargetPosition = foundLimb.TargetPosition;
-                        foundTargetPositionIsGrounded = foundLimb.LerpPositionIsGrounded;
-                        limbStuck = true;
-
-                        limb.IsInIdealPosition = false;
-                    }
-                }
-            }
-
-            #endregion
+            foundtargetPosition = FindTargetPosition();
+            kneeIsClipping = CheckIfKneeInWall();
 
             if (!foundtargetPosition || kneeIsClipping)
             {
-                limb.HasNoValidPosition = true; // The limb is either clipping into a wall or couldn't find a target position and couldn't use another limb's position
+                limb.HasValidPosition = false; // The limb is either clipping into a wall or couldn't find a target position and couldn't use another limb's position
             }
 
-            bool limbTooFar = Vector2.Distance(limb.HipBone.transform.position, limb.LerpPosition) > limb.Length;
-            bool limbTooClose = limb.IsFloating && Vector2.Distance(limb.LerpPosition, limbBase.transform.position) < footSpacingFromBase;
+            limbTooFar = CheckIfTooFar();
+            limbTooClose = CheckIfTooClose();
 
-            #region handle stepping
+            limbForcedToMove = limb.IsForcedToMove;
+            limb.IsForcedToMove = false;
 
-            LimbStepContext stepContext = LimbStepContext.None;
-
-            // The limb will move under one of the following conditions :
-
-            if (limbTooFar) // The limb cannot extend further
-            {
-                stepContext = LimbStepContext.TooFar;
-            }
-            else if (limbTooClose) // The limb's lerp position is too close to the body, only if the limb is floating
-            {
-                stepContext = LimbStepContext.TooClose;
-            }
-            else if (limbStuck) // The limb's knee is stuck in a wall and is forced to take another leg's position
-            {
-                stepContext = LimbStepContext.Clipping;
-            }
-            else if (limbFoundBetterPosition) // The limb has found a better position than it's current one
-            {
-                stepContext = LimbStepContext.FoundBetterPosition;
-            }
+            LimbStepContext stepContext = GetStepContext();
 
             if (stepContext != LimbStepContext.None)
             {
                 MoveLimb(limb, foundTargetPositionIsGrounded, stepContext);
+            }
+
+            #region local functions
+
+            bool FindTargetPosition()
+            {
+                foundTargetPositionIsGrounded = false;
+
+                if (hit) // The limb has found ground to attach to
+                {
+                    if (!limb.LerpPositionIsGrounded || !limb.IsInIdealPosition) // Immediatly move to the found position if limb is not in ideal position
+                    {
+                        limbFoundBetterPosition = true;
+                    }
+
+                    foundTargetPositionIsGrounded = true;
+                    limb.TargetPosition = hit.point;
+                    limb.IsInIdealPosition = true;
+                }
+                else if (allowFloatingFeet) // No ground found but we're allowed to have floating feet
+                {
+                    float targetDistance = GetFloatingFootTargetDistance(limb);
+
+                    limb.TargetPosition = ray.GetPoint(targetDistance);
+                    limb.IsInIdealPosition = true;
+                }
+                else // We try to attach to another limb's position
+                {
+                    limb.IsInIdealPosition = false;
+
+                    Limb foundLimb = SearchValidNeighborLimb(limb); // Tries to find a limb with a valid position so it can copy its target position
+
+                    if (foundLimb != null)
+                    {
+                        limb.TargetPosition = foundLimb.TargetPosition;
+                        foundTargetPositionIsGrounded = true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
+            bool CheckIfHipInWall()
+            {
+                if (limb.IsHipInWall(legLayerMask))
+                {
+                    limb.HasValidPosition = false; // Limb is immediatly considered invalid if the hip is in a wall
+                    return true;
+                }
+                else
+                {
+                    limb.HasValidPosition = true;
+                    return false;
+                }
+            }
+
+            bool CheckIfKneeInWall()
+            {
+                if (limb.IsKneeInWall(legLayerMask) && !limb.IsStepping) // Flip elbow if it is in a wall
+                {
+                    FlipLimb(limb);
+                    limb.Solver.UpdateIK(1f);
+
+                    if (limb.IsKneeInWall(legLayerMask)) // Check again after flip
+                    {
+                        FlipLimb(limb); // Flip back
+
+                        Limb foundLimb = SearchValidNeighborLimb(limb);
+
+                        if (foundLimb != null)
+                        {
+                            // FIND OUT WHY THE LEGS DON'T RELOCATE WHEN KNEES ARE CLIPPING
+
+                            limb.TargetPosition = foundLimb.TargetPosition;
+                            foundTargetPositionIsGrounded = foundLimb.LerpPositionIsGrounded;
+                            limbHasToRelocate = true;
+
+                            limb.IsInIdealPosition = false;
+                        }
+                        else
+                        {
+                            return true;
+                        }
+                    }
+                }
+
+                return false;
+            }
+
+            bool CheckIfTooFar()
+            {
+                return Vector2.Distance(limb.HipBone.transform.position, limb.LerpPosition) > limb.Length;
+            }
+
+            bool CheckIfTooClose()
+            {
+                return limb.IsFloating && Vector2.Distance(limb.LerpPosition, limbBase.transform.position) < footSpacingFromBase;
+            }
+
+            void DoRaycast()
+            {
+                ray = new Ray2D(limb.HipBone.transform.position, limb.Direction);
+                hit = Physics2D.Raycast(ray.origin, ray.direction, limb.Length, legLayerMask);
+                DrawRaycast();
+            }
+
+            void DrawRaycast()
+            {
+                if (_enableDebug && _debugSettings.raycasts)
+                {
+                    Debug.DrawLine(ray.origin, ray.GetPoint(limb.Length), Color.magenta);
+                }
+            }
+
+            LimbStepContext GetStepContext()
+            {
+                // The limb will move under one of the following conditions :
+
+                if (limbTooFar) // The limb cannot extend further
+                {
+                    return LimbStepContext.TooFar;
+                }
+                if (limbForcedToMove)
+                {
+                    return LimbStepContext.ForcedToMove;
+                }
+                else if (limbTooClose) // The limb's lerp position is too close to the body, only if the limb is floating
+                {
+                    return LimbStepContext.TooClose;
+                }
+                else if (limbHasToRelocate) // The limb's knee is stuck in a wall and is forced to take another leg's position
+                {
+                    return LimbStepContext.Clipping;
+                }
+                else if (limbFoundBetterPosition) // The limb has found a better position than it's current one
+                {
+                    return LimbStepContext.FoundBetterPosition;
+                }
+
+                return LimbStepContext.None;
             }
 
             #endregion
@@ -311,7 +363,7 @@ public class SpiderLimbHandler : MonoBehaviour
 
     private void LateUpdate()
     {
-        foreach (Limb limb in _limbs)
+        foreach (Limb limb in Limbs)
         {
             // Keep foot in position when the limb isn't stepping :
 
@@ -342,6 +394,11 @@ public class SpiderLimbHandler : MonoBehaviour
         limb.StepCoroutine = StartCoroutine(limb.Step(stepDuration));
     }
 
+    public void MoveLimb(Limb limb)
+    {
+
+    }
+
     /// <summary>
     /// Flips the knee position of a limb
     /// </summary>
@@ -356,6 +413,14 @@ public class SpiderLimbHandler : MonoBehaviour
         }
 
         limb.FlipCoroutine = StartCoroutine(limb.FlipKnee(kneeFlipDuration));
+    }
+
+    private float GetFloatingFootTargetDistance(Limb limb)
+    {
+        float baseDist = Mathf.Lerp(limb.SpacingFromBase, limb.Length, footFloatingDistance);
+        float randomizedDist = baseDist + Random.Range(limb.SpacingFromBase - baseDist, limb.Length - baseDist) * footPlacementRange;
+
+        return randomizedDist;
     }
 
     /// <summary>
@@ -403,22 +468,22 @@ public class SpiderLimbHandler : MonoBehaviour
 
             if (goClockwise && !clockwiseHasLooped)
             {
-                if (clockwiseLimbID >= _limbs.Count) // Index out of range
+                if (clockwiseLimbID >= Limbs.Count) // Index out of range
                 {
                     clockwiseLimbID = 0; // Loop
                 }
 
-                neighborLimb = _limbs[clockwiseLimbID];
+                neighborLimb = Limbs[clockwiseLimbID];
                 clockwiseLimbID++;
             }
             else if (!goClockwise && !counterClockwiseHasLooped)
             {
                 if (counterClockwiseLimbID < 0) // Index out range
                 {
-                    counterClockwiseLimbID = _limbs.Count - 1; // Loop
+                    counterClockwiseLimbID = Limbs.Count - 1; // Loop
                 }
 
-                neighborLimb = _limbs[counterClockwiseLimbID];
+                neighborLimb = Limbs[counterClockwiseLimbID];
                 counterClockwiseLimbID--;
             }
 
@@ -435,7 +500,7 @@ public class SpiderLimbHandler : MonoBehaviour
                     counterClockwiseHasLooped = true;
                 }
             }
-            else if (!neighborLimb.HasNoValidPosition) // If we haven't seen it, we check if it is valid
+            else if (neighborLimb.HasValidPosition) // If we haven't seen it, we check if it is valid
             {
                 limbsFound = true;
                 _validLimbsList.Add(neighborLimb);
@@ -457,8 +522,6 @@ public class SpiderLimbHandler : MonoBehaviour
         return chosenLimb;
     }
 
-    #endregion
-
     #region setup
 
     /// <summary>
@@ -470,7 +533,7 @@ public class SpiderLimbHandler : MonoBehaviour
 
         for (int i = 0; i < limbRoots.Length; i++)
         {
-            _limbs.Add(BuildLimb(limbRoots[i], i)) ;
+            Limbs.Add(BuildLimb(limbRoots[i], i)) ;
         }
     }
 
@@ -658,7 +721,7 @@ public class SpiderLimbHandler : MonoBehaviour
     {
         _limbPositionsTemp.Clear();
 
-        foreach (Limb limb in _limbs)
+        foreach (Limb limb in Limbs)
         {
             _limbPositionsTemp.Add(limb.FootBone.transform.position);
         }
@@ -727,7 +790,7 @@ public class SpiderLimbHandler : MonoBehaviour
             }
         }
 
-        foreach (Limb limb in _limbs)
+        foreach (Limb limb in Limbs)
         {
             if (_debugSettings.targetPositions)
             {

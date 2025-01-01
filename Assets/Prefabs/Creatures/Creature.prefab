@@ -81,16 +81,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3acbfb5c163225847ae6108db3368d1f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _currentBehavior: 1
+  _currentBehavior: 2
   _targetTransform: {fileID: 0}
   _stoppingDistance: 4
+  _movementEnabled: 1
   _movementSpeed: 200
   _standingForce: 25
-  _stepDistance: 0.5
-  _stepUpdateFrequency: 0.05
+  _stepDistance: 1.5
+  _stepUpdateFrequency: 0.15
   _stepFrequencyRange: 0.01
   _stepDistanceRange: 0.25
-  _deviationRange: 120
+  _deviationRange: 60
   _enableDebug: 0
 --- !u!114 &6286530986277928330
 MonoBehaviour:
@@ -110,7 +111,7 @@ MonoBehaviour:
   footFloatingDistance: 0.5
   footPlacementRange: 1
   stepDuration: 0.05
-  kneeFlipDuration: 0.1
+  kneeFlipDuration: 0.2
   retractDuration: 0.05
   legLayerMask:
     serializedVersion: 2
@@ -131,7 +132,7 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 248188756c5c1f84cb5f958aeee43f2f, type: 3}
   - {fileID: 8300000, guid: 970c3de435ab1e6429ae2a0ca71fdc98, type: 3}
   - {fileID: 8300000, guid: 804df50fe8214ce42bdf8b49f1cee33e, type: 3}
-  _enableDebug: 1
+  _enableDebug: 0
   _debugSettings:
     bones: 0
     raycasts: 0

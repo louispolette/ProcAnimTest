@@ -16,10 +16,15 @@ public class SpiderMovement : MonoBehaviour
 
     [Header("Movement Parameters")]
 
+    [SerializeField] private bool _movementEnabled = true;
+
+    [Space]
+
     [SerializeField, Min(0)] private float _movementSpeed = 1.0f;
     [SerializeField, Min(0)] private float _standingForce = 1f;
     [SerializeField, Min(0)] private float _stepDistance = 0.5f;
     [SerializeField, Min(0)] private float _stepUpdateFrequency = 1f;
+
     
     [Header("Movement Tweaks")]
 
@@ -107,6 +112,8 @@ public class SpiderMovement : MonoBehaviour
 
         void DoStepForce()
         {
+            if (!_movementEnabled) return;
+
             _rb.AddForce(GetAccelForce(_targetStepPosition, _movementSpeed));
             _rb.AddForce(GetBrakeForce(_targetStepPosition));
         }
@@ -160,13 +167,19 @@ public class SpiderMovement : MonoBehaviour
 
         if (_stepPositionUpdateTimer >= _nextstepPositionUpdate)
         {
-            _targetStepPosition = GetStepTowardsTarget();
-            _stepPositionUpdateTimer = 0;
-            _nextstepPositionUpdate = Mathf.Max(0f, Random.Range(_stepUpdateFrequency - _stepFrequencyRange / 2,
-                                                                 _stepUpdateFrequency + _stepFrequencyRange / 2));
+            SetNewStepPosition();
+            MoveRandomLeg();
         }
 
         _stepPositionUpdateTimer += Time.deltaTime;
+    }
+
+    private void SetNewStepPosition()
+    {
+        _targetStepPosition = GetStepTowardsTarget();
+        _stepPositionUpdateTimer = 0;
+        _nextstepPositionUpdate = Mathf.Max(0f, Random.Range(_stepUpdateFrequency - _stepFrequencyRange / 2,
+                                                             _stepUpdateFrequency + _stepFrequencyRange / 2));
     }
 
     private Vector2 GetStepTowardsTarget()
@@ -181,6 +194,13 @@ public class SpiderMovement : MonoBehaviour
         Vector3 stepPosition = deviatedDir * stepDistance;
 
         return transform.position + stepPosition;
+    }
+
+    private void MoveRandomLeg()
+    {
+        List<Limb> limbs = _limbHandler.Limbs;
+        int randomLegIndex = Random.Range(0, limbs.Count);
+        limbs[randomLegIndex].ForceMove();
     }
 
     private void OnDrawGizmos()

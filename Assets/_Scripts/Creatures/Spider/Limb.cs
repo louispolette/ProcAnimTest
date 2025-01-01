@@ -68,9 +68,9 @@ public class Limb
     public bool IsStepping { get; protected set; } = false;
     public Coroutine StepCoroutine { get; set; }
     /// <summary>
-    /// True if the limb cannot place itself in a correct way
+    /// False if the limb cannot place itself in a correct way
     /// </summary>
-    public bool HasNoValidPosition { get; set; } = false;
+    public bool HasValidPosition { get; set; } = false;
     /// <summary>
     /// Wether the limb is in the middle of hiding or not
     /// </summary>
@@ -79,6 +79,10 @@ public class Limb
     /// Wether the limb is in the middle of appearing or not
     /// </summary>
     public bool IsExtending { get; protected set; } = false;
+    /// <summary>
+    /// True if the limb has been prompted to move by the movement script
+    /// </summary>
+    public bool IsForcedToMove { get; set; } = false;
     /// <summary>
     /// The progress of the limb being hidden or not. 0 is visible and 1 is fully hidden
     /// </summary>
@@ -137,6 +141,11 @@ public class Limb
     {
         LerpPosition = TargetPosition;
         LerpPositionIsGrounded = targetPositionIsGrounded;
+    }
+
+    public void ForceMove()
+    {
+        IsForcedToMove = true;
     }
 
     public IEnumerator Step(float stepDuration)

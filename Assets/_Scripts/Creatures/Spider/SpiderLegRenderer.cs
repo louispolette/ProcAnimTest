@@ -35,18 +35,18 @@ public class SpiderLegRenderer : MonoBehaviour
 
     private void Init()
     {
-        _limbs = _limbScript._limbs;
+        _limbs = _limbScript.Limbs;
     }
 
     private void FixedUpdate()
     {
         foreach (Limb limb in _limbs)
         {
-            if (limb.HasNoValidPosition && !limb.IsRetracting && limb.CurrentRetractation < 1f)
+            if (!limb.HasValidPosition && !limb.IsRetracting && limb.CurrentRetractation < 1f)
             {
                 StartRetractationCoroutine(limb, 1f);
             }
-            else if (!limb.HasNoValidPosition && !limb.IsExtending && limb.CurrentRetractation > 0f)
+            else if (limb.HasValidPosition && !limb.IsExtending && limb.CurrentRetractation > 0f)
             {
                 StartRetractationCoroutine(limb, 0f);
             }
