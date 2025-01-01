@@ -76,19 +76,19 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3377426433073949596}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3acbfb5c163225847ae6108db3368d1f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   _currentBehavior: 1
   _targetTransform: {fileID: 0}
-  _stoppingDistance: 2
-  _movementSpeed: 1
-  _standingForce: 1
-  _stepDistance: 1.5
-  _stepUpdateFrequency: 0.25
-  _stepFrequencyRange: 0.5
+  _stoppingDistance: 4
+  _movementSpeed: 200
+  _standingForce: 25
+  _stepDistance: 0.5
+  _stepUpdateFrequency: 0.05
+  _stepFrequencyRange: 0.01
   _stepDistanceRange: 0.25
   _deviationRange: 120
   _enableDebug: 0
@@ -116,7 +116,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 64
   limbBase: {fileID: 7090699460722082573}
-  legAmount: 30
+  legAmount: 8
   solversParent: {fileID: 1550352268150661577}
   targetsParent: {fileID: 5139737147527586932}
   rendererParent: {fileID: 5026908615720586164}
@@ -192,7 +192,7 @@ Rigidbody2D:
     m_Bits: 0
   m_Interpolate: 0
   m_SleepingMode: 1
-  m_CollisionDetection: 0
+  m_CollisionDetection: 1
   m_Constraints: 4
 --- !u!1 &3613286358005580225
 GameObject:

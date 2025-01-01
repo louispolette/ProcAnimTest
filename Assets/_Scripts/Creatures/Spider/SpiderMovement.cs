@@ -102,29 +102,35 @@ public class SpiderMovement : MonoBehaviour
 
     private void Move()
     {
-        _rb.AddForce(GetAccelForce());
-        _rb.AddForce(GetBrakeForce());
-        _rb.AddForce(GetStandingForce());
+        DoStepForce();
+        DoStandingForce();
+
+        void DoStepForce()
+        {
+            _rb.AddForce(GetAccelForce(_targetStepPosition, _movementSpeed));
+            _rb.AddForce(GetBrakeForce(_targetStepPosition));
+        }
+        void DoStandingForce()
+        {
+            Vector2 averageLimbPos = _limbHandler.GetAverageLimbPosition();
+            _rb.AddForce(GetAccelForce(averageLimbPos, _standingForce));
+            _rb.AddForce(GetBrakeForce(averageLimbPos));
+        }
     }
 
-    private Vector2 GetStandingForce()
+    private Vector2 GetAccelForce(Vector2 accelTarget, float forceMult = 1f)
     {
-        return (_limbHandler.GetAverageLimbPosition() - _rb.position).normalized * _standingForce;
-    }
-
-    private Vector2 GetAccelForce()
-    {
-        Vector2 dir = (_targetStepPosition - _rb.position).normalized;
-        float speed = Vector2.Distance(_rb.position, _targetStepPosition) * _movementSpeed;
+        Vector2 dir = (accelTarget - _rb.position).normalized;
+        float speed = Vector2.Distance(_rb.position, accelTarget) * forceMult;
 
         Vector2 accelForce = dir * speed;
 
         return accelForce;
     }
 
-    private Vector2 GetBrakeForce()
+    private Vector2 GetBrakeForce(Vector2 brakeTarget)
     {
-        float distance = Vector2.Distance(_rb.position, _targetStepPosition);
+        float distance = Vector2.Distance(_rb.position, brakeTarget);
         float velocityMag = _rb.velocity.magnitude;
         Vector2 velocity = _rb.velocity;
         float mass = _rb.mass;
