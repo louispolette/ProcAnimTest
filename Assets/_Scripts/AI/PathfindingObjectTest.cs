@@ -8,15 +8,38 @@ public class PathfindingObjectTest : MonoBehaviour
 
     [SerializeField] private Transform _target;
 
+    [Header("Debug")]
+
+    [SerializeField] private bool _drawGizmos = false;
+
     List<PathfindingNode> path;
 
-    private void FixedUpdate()
+    private void OnEnable()
+    {
+        PathfindingManager.OnPathfindingTick += PathfindingUpdate;
+    }
+
+    private void OnDisable()
+    {
+        PathfindingManager.OnPathfindingTick -= PathfindingUpdate;
+    }
+
+    private void PathfindingUpdate()
     {
         path = Pathfinding.FindPath(transform.position, _target.position);
     }
 
+    private void FixedUpdate()
+    {
+        if (path == null || path.Count <= 1) return;
+
+        transform.position = Vector2.MoveTowards(transform.position, path[1].position, 0.15f);
+    }
+
     private void OnDrawGizmos()
     {
+        if (!_drawGizmos) return;
+
         if (path == null) return;
 
         Gizmos.color = Color.white;

@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -6,7 +7,7 @@ public class PathfindingManager : MonoBehaviour
 {
     public static PathfindingManager Instance;
 
-    [Space]
+    [Header("Node Creation")]
 
     [SerializeField] private Vector2 _gridOrigin;
 
@@ -20,6 +21,10 @@ public class PathfindingManager : MonoBehaviour
     [SerializeField] private float _gridWidth = 50f;
     [SerializeField] private float _gridHeight = 50f;
 
+    [Header("Performance")]
+
+    [SerializeField] private float _pathfindingTickrate = 0.1f;
+
     [Header("Debug")]
 
     [SerializeField] private bool _gizmosEnabled = false;
@@ -28,6 +33,10 @@ public class PathfindingManager : MonoBehaviour
 
     [SerializeField] private bool _drawNodes = true;
     [SerializeField] private bool _drawNavigationArea = true;
+
+    public static event Action OnPathfindingTick;
+
+    private float _tickTimer = 0f;
 
     public Dictionary<Vector2, PathfindingNode> Tiles { get; private set; } = new Dictionary<Vector2, PathfindingNode>();
 
@@ -39,6 +48,17 @@ public class PathfindingManager : MonoBehaviour
     private void Start()
     {
         Tiles = GenerateGrid();
+    }
+
+    private void Update()
+    {
+        _tickTimer += Time.deltaTime;
+
+        if (_tickTimer >= _pathfindingTickrate)
+        {
+            _tickTimer = 0f;
+            OnPathfindingTick?.Invoke();
+        }
     }
 
     private Dictionary<Vector2, PathfindingNode> GenerateGrid()
@@ -71,7 +91,7 @@ public class PathfindingManager : MonoBehaviour
 
     private bool IsNodeAccessible(Vector2 position)
     {
-        var hitCollider = Physics2D.OverlapCircle(position, _nodeSpacing, _obstacleDetectionMask);
+        var hitCollider = Physics2D.OverlapCircle(position, 0f, _obstacleDetectionMask);
 
         return hitCollider == null;
     }
@@ -79,17 +99,18 @@ public class PathfindingManager : MonoBehaviour
     public List<PathfindingNode> GetNeighbors(PathfindingNode node)
     {
         List<PathfindingNode> neighbors = new List<PathfindingNode>();
+        float unit = _nodeSpacing;
 
-        for (float x = -1; x <= 1; x++)
+        for (float x = -unit; x <= unit; x += unit)
         {
-            for (float y = -1; y <= 1; y++)
+            for (float y = -unit; y <= unit; y += unit)
             {
                 if (x == 0 && y == 0) continue;
 
                 float checkX = node.position.x + x;
                 float checkY = node.position.y + y;
 
-                if (checkX >= 0f && checkX < _gridWidth && checkY >= 0f && checkY < _gridHeight)
+                if (checkX >= _gridOrigin.x && checkX < _gridOrigin.x + _gridWidth && checkY >= _gridOrigin.y && checkY < _gridOrigin.y + _gridHeight)
                 {
                     neighbors.Add(Tiles[new Vector2(checkX, checkY)]);
                 }
@@ -106,8 +127,8 @@ public class PathfindingManager : MonoBehaviour
 
     public PathfindingNode GetNodeFromWorldPosition(Vector2 worldPosition)
     {
-        Vector2 clampedPosition = new Vector2(Mathf.Clamp(worldPosition.x, 0f, _gridOrigin.x + _gridWidth),
-                                              Mathf.Clamp(worldPosition.y, 0f, _gridOrigin.y + _gridHeight));
+        Vector2 clampedPosition = new Vector2(Mathf.Clamp(worldPosition.x, _gridOrigin.x, _gridOrigin.x + _gridWidth),
+                                              Mathf.Clamp(worldPosition.y, _gridOrigin.y, _gridOrigin.y + _gridHeight));
 
         float snappedX = GetClosestNumberFromStep(clampedPosition.x, _nodeSpacing);
         float snappedY = GetClosestNumberFromStep(clampedPosition.y, _nodeSpacing);

@@ -38,8 +38,7 @@ public static class Pathfinding
 
             if (currentNode == endNode)
             {
-                List<PathfindingNode> path = new List<PathfindingNode>();
-                path = RetracePath();
+                List<PathfindingNode> path = RetracePath();
                 return path;
             }
 
