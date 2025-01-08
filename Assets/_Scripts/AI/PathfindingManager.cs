@@ -13,11 +13,21 @@ public class PathfindingManager : MonoBehaviour
     [Space]
 
     [SerializeField, Min(0f)] private float _nodeSpacing = 1f;
+    [SerializeField] private LayerMask _obstacleDetectionMask;
 
     [Space]
 
-    [SerializeField] private int _gridWidth = 50;
-    [SerializeField] private int _gridHeight = 50;
+    [SerializeField] private float _gridWidth = 50f;
+    [SerializeField] private float _gridHeight = 50f;
+
+    [Header("Debug")]
+
+    [SerializeField] private bool _gizmosEnabled = false;
+
+    [Space]
+
+    [SerializeField] private bool _drawNodes = true;
+    [SerializeField] private bool _drawNavigationArea = true;
 
     public Dictionary<Vector2, PathfindingNode> Tiles { get; private set; } = new Dictionary<Vector2, PathfindingNode>();
 
@@ -33,15 +43,17 @@ public class PathfindingManager : MonoBehaviour
 
     private Dictionary<Vector2, PathfindingNode> GenerateGrid()
     {
+        if (_nodeSpacing <= 0f) return null;
+
         var tiles = new Dictionary<Vector2, PathfindingNode>();
 
         float xPosition = _gridOrigin.x;
 
-        for (int x = 0; x < _gridWidth; x++)
+        while (xPosition <= _gridOrigin.x + _gridWidth)
         {
             float yPosition = _gridOrigin.y;
 
-            for (int y = 0; y < _gridHeight; y++)
+            while (yPosition <= _gridOrigin.y + _gridHeight)
             {
                 var newNodePosition = new Vector2(xPosition, yPosition);
                 var newNode = new PathfindingNode(IsNodeAccessible(newNodePosition), newNodePosition);
@@ -59,17 +71,98 @@ public class PathfindingManager : MonoBehaviour
 
     private bool IsNodeAccessible(Vector2 position)
     {
-        return true;
+        var hitCollider = Physics2D.OverlapCircle(position, _nodeSpacing, _obstacleDetectionMask);
+
+        return hitCollider == null;
+    }
+
+    public List<PathfindingNode> GetNeighbors(PathfindingNode node)
+    {
+        List<PathfindingNode> neighbors = new List<PathfindingNode>();
+
+        for (float x = -1; x <= 1; x++)
+        {
+            for (float y = -1; y <= 1; y++)
+            {
+                if (x == 0 && y == 0) continue;
+
+                float checkX = node.position.x + x;
+                float checkY = node.position.y + y;
+
+                if (checkX >= 0f && checkX < _gridWidth && checkY >= 0f && checkY < _gridHeight)
+                {
+                    neighbors.Add(Tiles[new Vector2(checkX, checkY)]);
+                }
+            }
+        }
+
+        return neighbors;
+    }
+
+    public float GetDistance(PathfindingNode nodeA, PathfindingNode nodeB)
+    {
+        return Vector2.Distance(nodeA.position, nodeB.position);
+    }
+
+    public PathfindingNode GetNodeFromWorldPosition(Vector2 worldPosition)
+    {
+        Vector2 clampedPosition = new Vector2(Mathf.Clamp(worldPosition.x, 0f, _gridOrigin.x + _gridWidth),
+                                              Mathf.Clamp(worldPosition.y, 0f, _gridOrigin.y + _gridHeight));
+
+        float snappedX = GetClosestNumberFromStep(clampedPosition.x, _nodeSpacing);
+        float snappedY = GetClosestNumberFromStep(clampedPosition.y, _nodeSpacing);
+
+        if (Tiles.TryGetValue(new Vector2(snappedX, snappedY), out PathfindingNode foundNode))
+        {
+            return foundNode;
+        }
+        else
+        {
+            Debug.LogError($"Couldn't find node at [{snappedX},{snappedY}]");
+            return null;
+        }
+
+        float GetClosestNumberFromStep(float value, float step)
+        {
+            // Get the absolute values of our arguments
+            var absValue = Mathf.Abs(value);
+            step = Mathf.Abs(step);
+
+            // Determing the numbers on either side of value
+            var low = absValue - absValue % step;
+            var high = low + step;
+
+            // Return the closest one, multiplied by -1 if value < 0
+            var result = absValue - low < high - absValue ? low : high;
+            return result * Mathf.Sign(value);
+        }
     }
 
     private void OnDrawGizmos()
     {
-        if (Tiles.Count <= 0) return;
+        if (!_gizmosEnabled) return;
 
-        foreach (var tile in Tiles)
+        DrawNavigationArea();
+        DrawNodes();
+        
+        void DrawNodes()
         {
-            Gizmos.color = Color.green;
-            Gizmos.DrawSphere(tile.Key, 0.1f);
+            if (!_drawNodes || Tiles.Count <= 0) return;
+
+            foreach (var tile in Tiles)
+            {
+                Gizmos.color = tile.Value.Accessible ? Color.green : Color.red;
+                Gizmos.DrawSphere(tile.Key, _nodeSpacing * 0.15f);
+            }
+        }
+
+        void DrawNavigationArea()
+        {
+            if (!_drawNavigationArea) return;
+
+            Gizmos.color = Color.white;
+            Vector2 boxCenter = new Vector2(_gridOrigin.x + _gridWidth / 2f, _gridOrigin.y + _gridHeight / 2f);
+            Gizmos.DrawWireCube(boxCenter, new Vector2(_gridWidth, _gridHeight));
         }
     }
 }

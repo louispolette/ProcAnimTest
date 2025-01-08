@@ -11,7 +11,7 @@ public class PathfindingNode
     public float H { get ; private set; }
     public float F => G + H;
 
-    public bool Walkable { get; private set; }
+    public bool Accessible { get; private set; }
     public Vector2 position { get; private set; }
 
     public void SetConnection(PathfindingNode node) => Connection = node;
@@ -21,7 +21,7 @@ public class PathfindingNode
 
     public PathfindingNode(bool walkable, Vector2 position)
     {
-        Walkable = walkable;
+        Accessible = walkable;
         this.position = position;
     }
 }

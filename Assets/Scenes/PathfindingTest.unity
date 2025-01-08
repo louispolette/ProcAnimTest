@@ -1314,16 +1314,32 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4807371029645261966, guid: c7f608c3c2cf55d43ac914910f750cf3, type: 3}
+      propertyPath: _drawNodes
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4807371029645261966, guid: c7f608c3c2cf55d43ac914910f750cf3, type: 3}
       propertyPath: _gridWidth
       value: 100
       objectReference: {fileID: 0}
     - target: {fileID: 4807371029645261966, guid: c7f608c3c2cf55d43ac914910f750cf3, type: 3}
+      propertyPath: _gridHeight
+      value: 15
+      objectReference: {fileID: 0}
+    - target: {fileID: 4807371029645261966, guid: c7f608c3c2cf55d43ac914910f750cf3, type: 3}
       propertyPath: _gridOrigin.x
-      value: -5
+      value: -50
       objectReference: {fileID: 0}
     - target: {fileID: 4807371029645261966, guid: c7f608c3c2cf55d43ac914910f750cf3, type: 3}
       propertyPath: _gridOrigin.y
-      value: -5
+      value: -7.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 4807371029645261966, guid: c7f608c3c2cf55d43ac914910f750cf3, type: 3}
+      propertyPath: _gizmosEnabled
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4807371029645261966, guid: c7f608c3c2cf55d43ac914910f750cf3, type: 3}
+      propertyPath: _drawNavigationArea
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5104329870522871947, guid: c7f608c3c2cf55d43ac914910f750cf3, type: 3}
       propertyPath: m_Name

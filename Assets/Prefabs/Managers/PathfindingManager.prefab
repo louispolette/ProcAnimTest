@@ -44,3 +44,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b75e656e67e8b844883f31135e1127ba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _gridOrigin: {x: 0, y: 0}
+  _nodeSpacing: 0.5
+  _obstacleDetectionMask:
+    serializedVersion: 2
+    m_Bits: 64
+  _gridWidth: 50
+  _gridHeight: 50
+  _drawNodes: 0
+  _drawNavigationArea: 0
