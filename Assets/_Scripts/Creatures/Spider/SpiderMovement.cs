@@ -189,7 +189,7 @@ public class SpiderMovement : MonoBehaviour
 
     private void CheckIfDestinationReached()
     {
-        _hasReachedDestination = Vector2.Distance(_rb.position, DestinationPosition) <= _stoppingDistance;
+        _hasReachedDestination = Vector2.Distance(_rb.position, DestinationPosition) <= _stoppingDistance; // Needs rework too
     }
 
     #endregion
@@ -224,7 +224,7 @@ public class SpiderMovement : MonoBehaviour
         Vector2 deviatedDir = Quaternion.AngleAxis(randomDeviationAngle, Vector3.forward) * baseDirection;
 
         float randomMaxDist = Random.Range(Mathf.Max(0, _stepDistance - _stepDistanceRange), _stepDistance + _stepDistanceRange);
-        float stepDistance = Mathf.Min(Vector2.Distance(transform.position, DestinationPosition), randomMaxDist);
+        float stepDistance = Mathf.Min(Vector2.Distance(transform.position, DestinationPosition), randomMaxDist); // Kinda conflicts with the pathfinding system
 
         Vector3 stepPosition = deviatedDir * stepDistance;
 
