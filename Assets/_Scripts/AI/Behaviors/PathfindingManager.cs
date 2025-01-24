@@ -159,7 +159,7 @@ public class PathfindingManager : MonoBehaviour
         }
     }
 
-    private void OnDrawGizmos()
+    private void OnDrawGizmosSelected()
     {
         if (!_gizmosEnabled) return;
 

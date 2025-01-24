@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PathfindingObjectTest : MonoBehaviour
+public class Pathfinder : MonoBehaviour
 {
     [Space]
 
@@ -16,24 +16,29 @@ public class PathfindingObjectTest : MonoBehaviour
 
     private void OnEnable()
     {
-        PathfindingManager.OnPathfindingTick += PathfindingUpdate;
+        PathfindingManager.OnPathfindingTick += DoPathfindingUpdate;
     }
 
     private void OnDisable()
     {
-        PathfindingManager.OnPathfindingTick -= PathfindingUpdate;
+        PathfindingManager.OnPathfindingTick -= DoPathfindingUpdate;
     }
 
-    private void PathfindingUpdate()
+    private void DoPathfindingUpdate()
     {
         path = Pathfinding.FindPath(transform.position, _target.position);
     }
 
-    private void FixedUpdate()
+    /// <summary>
+    /// Returns the PathfindingNode0 located at a certain amount of nodes away from the starting node
+    /// </summary>
+    /// <param name="distance">Distance (how many nodes in between) from the starting node to the returned node</param>
+    /// <returns></returns>
+    public PathfindingNode GetNodeAtDistance(int distance)
     {
-        if (path == null || path.Count <= 1) return;
+        if (path == null || path.Count <= 1) return null;
 
-        transform.position = Vector2.MoveTowards(transform.position, path[1].position, 0.15f);
+        return path[distance];
     }
 
     private void OnDrawGizmos()

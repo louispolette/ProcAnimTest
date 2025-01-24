@@ -7,7 +7,7 @@ public class SpiderMovement : MonoBehaviour
 {
     [Header("Pathfinding")]
 
-    [SerializeField] private SpiderBehavior _currentBehavior = SpiderBehavior.MoveTowardsTranform;
+    [SerializeField] private SpiderBehaviorMode _currentBehavior = SpiderBehaviorMode.MoveTowardsTranform;
     [SerializeField] private Transform _targetTransform;
 
     [Space]
@@ -39,6 +39,7 @@ public class SpiderMovement : MonoBehaviour
     private Rigidbody2D _rb;
     private Camera _camera;
     private SpiderLimbHandler _limbHandler;
+    private Pathfinder _pathfinder;
 
     private Vector2 _targetStepPosition;
     private Vector2 _lastClickedPosition;
@@ -54,10 +55,12 @@ public class SpiderMovement : MonoBehaviour
         {
             switch (_currentBehavior)
             {
-                case SpiderBehavior.MoveTowardsTranform:
+                case SpiderBehaviorMode.MoveTowardsTranform:
                     return _targetTransform.position;
-                case SpiderBehavior.FollowClick:
+                case SpiderBehaviorMode.FollowClick:
                     return _lastClickedPosition;
+                case SpiderBehaviorMode.Pathfind:
+                    return _pathfinder.GetNodeAtDistance(1).position;
                 default:
                     return transform.position;
             }
@@ -77,22 +80,25 @@ public class SpiderMovement : MonoBehaviour
         }
     }
 
-    private enum SpiderBehavior
+    //REMOVE THIS
+    private enum SpiderBehaviorMode
     {
         None,
         MoveTowardsTranform,
-        FollowClick
+        FollowClick,
+        Pathfind
     }
 
     private void Awake()
     {
         _rb = GetComponent<Rigidbody2D>();
         _limbHandler = GetComponent<SpiderLimbHandler>();
+        _pathfinder = GetComponent<Pathfinder>();
     }
 
     private void Update()
     {
-        if (_currentBehavior == SpiderBehavior.FollowClick)
+        if (_currentBehavior == SpiderBehaviorMode.FollowClick)
         {
             HandleClicks();
         }
@@ -105,11 +111,14 @@ public class SpiderMovement : MonoBehaviour
         Move();
     }
 
+    #region movement
+
     private void Move()
     {
         DoStepForce();
         DoStandingForce();
 
+        //Force that let's the spider take steps
         void DoStepForce()
         {
             if (!_movementEnabled) return;
@@ -117,6 +126,8 @@ public class SpiderMovement : MonoBehaviour
             _rb.AddForce(GetAccelForce(_targetStepPosition, _movementSpeed));
             _rb.AddForce(GetBrakeForce(_targetStepPosition));
         }
+
+        //Force that makes the spiders' legs affect its movement
         void DoStandingForce()
         {
             Vector2 averageLimbPos = _limbHandler.GetAverageLimbPosition();
@@ -125,6 +136,12 @@ public class SpiderMovement : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Force applied that makes the rigidbody move towards a position
+    /// </summary>
+    /// <param name="accelTarget">Position that we're applying a focr towards</param>
+    /// <param name="forceMult">Force multiplier</param>
+    /// <returns></returns>
     private Vector2 GetAccelForce(Vector2 accelTarget, float forceMult = 1f)
     {
         Vector2 dir = (accelTarget - _rb.position).normalized;
@@ -135,6 +152,12 @@ public class SpiderMovement : MonoBehaviour
         return accelForce;
     }
 
+
+    /// <summary>
+    /// Calculates the force necessary to prevent the rigidbody from overshooting the chosen position
+    /// </summary>
+    /// <param name="brakeTarget">Position to brake from</param>
+    /// <returns></returns>
     private Vector2 GetBrakeForce(Vector2 brakeTarget)
     {
         float distance = Vector2.Distance(_rb.position, brakeTarget);
@@ -148,6 +171,10 @@ public class SpiderMovement : MonoBehaviour
         return brakeForce;
     }
 
+    #endregion
+
+    #region input
+
     private void HandleClicks()
     {
         if (Input.GetMouseButtonDown(0))
@@ -156,10 +183,18 @@ public class SpiderMovement : MonoBehaviour
         }
     }
 
+    #endregion
+
+    #region checks
+
     private void CheckIfDestinationReached()
     {
         _hasReachedDestination = Vector2.Distance(_rb.position, DestinationPosition) <= _stoppingDistance;
     }
+
+    #endregion
+
+    #region steps
 
     private void HandleStepUpdate()
     {
@@ -189,12 +224,16 @@ public class SpiderMovement : MonoBehaviour
         Vector2 deviatedDir = Quaternion.AngleAxis(randomDeviationAngle, Vector3.forward) * baseDirection;
 
         float randomMaxDist = Random.Range(Mathf.Max(0, _stepDistance - _stepDistanceRange), _stepDistance + _stepDistanceRange);
-        float stepDistance = Mathf.Min(Vector2.Distance(transform.position, _targetTransform.position), randomMaxDist);
+        float stepDistance = Mathf.Min(Vector2.Distance(transform.position, DestinationPosition), randomMaxDist);
 
         Vector3 stepPosition = deviatedDir * stepDistance;
 
         return transform.position + stepPosition;
     }
+
+    #endregion
+
+    #region legs
 
     private void MoveRandomLeg()
     {
@@ -202,6 +241,8 @@ public class SpiderMovement : MonoBehaviour
         int randomLegIndex = Random.Range(0, limbs.Count);
         limbs[randomLegIndex].ForceMove();
     }
+
+    #endregion
 
     private void OnDrawGizmos()
     {
