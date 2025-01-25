@@ -8,6 +8,10 @@ public class SpiderHeadController : MonoBehaviour
 
     [SerializeField] private Transform _head;
 
+    [Space]
+
+    [SerializeField] private float _rotationSpeed = 1f;
+
     private Pathfinder _pathfinder;
 
     private Vector2? _positionToLookAt = null;
@@ -17,13 +21,15 @@ public class SpiderHeadController : MonoBehaviour
         _pathfinder = GetComponent<Pathfinder>();
     }
 
+    // TO DO : Make head look directly at player transform if in line of sight, otherwise look at last seen position
+
     private void Update()
     {
         UpdateLookTarget();
         
         if (_positionToLookAt != null)
         {
-            LookAt(_positionToLookAt.GetValueOrDefault());
+            RotateHeadTowardsTarget();
         }
     }
 
@@ -40,9 +46,15 @@ public class SpiderHeadController : MonoBehaviour
         _positionToLookAt = targetPosition;
     }
 
-    private void LookAt(Vector2 lookTarget)
+    private void RotateHeadTowardsTarget()
     {
-        Vector2 dir = ((Vector2)_head.position - lookTarget).normalized;
-        _head.up = dir;
+        Vector3 dir = (Vector3)_positionToLookAt.GetValueOrDefault() - _head.position;
+
+        Quaternion rot = Quaternion.Slerp(_head.rotation, Quaternion.LookRotation(dir, Vector3.forward), Time.deltaTime * _rotationSpeed);
+
+        rot.x = 0f;
+        rot.y = 0f;
+
+        _head.rotation = rot;
     }
 }
