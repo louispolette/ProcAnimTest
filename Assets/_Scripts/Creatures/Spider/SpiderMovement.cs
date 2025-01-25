@@ -7,7 +7,6 @@ public class SpiderMovement : MonoBehaviour
 {
     [Header("Pathfinding")]
 
-    [SerializeField] private SpiderBehaviorMode _currentBehavior = SpiderBehaviorMode.MoveTowardsTranform;
     [SerializeField] private Transform _targetTransform;
 
     [Space]
@@ -42,66 +41,22 @@ public class SpiderMovement : MonoBehaviour
     private Pathfinder _pathfinder;
 
     private Vector2 _targetStepPosition;
-    private Vector2 _lastClickedPosition;
 
     private float _stepPositionUpdateTimer;
     private float _nextstepPositionUpdate;
 
     private bool _hasReachedDestination = false;
 
-    public Vector2 DestinationPosition
-    {
-        get
-        {
-            switch (_currentBehavior)
-            {
-                case SpiderBehaviorMode.MoveTowardsTranform:
-                    return _targetTransform.position;
-                case SpiderBehaviorMode.FollowClick:
-                    return _lastClickedPosition;
-                case SpiderBehaviorMode.Pathfind:
-                    return _pathfinder.GetNodeAtDistance(1).position;
-                default:
-                    return transform.position;
-            }
-        }
-    }
-
-    private Camera Camera
-    {
-        get
-        {
-            if (_camera == null)
-            {
-                _camera = Camera.main;
-            }
-
-            return _camera;
-        }
-    }
-
-    //REMOVE THIS
-    private enum SpiderBehaviorMode
-    {
-        None,
-        MoveTowardsTranform,
-        FollowClick,
-        Pathfind
-    }
+    /// <summary>
+    /// Position that the spider is pathfinding to
+    /// </summary>
+    public Vector2 DestinationPosition => _pathfinder.DestinationNode.position;
 
     private void Awake()
     {
         _rb = GetComponent<Rigidbody2D>();
         _limbHandler = GetComponent<SpiderLimbHandler>();
         _pathfinder = GetComponent<Pathfinder>();
-    }
-
-    private void Update()
-    {
-        if (_currentBehavior == SpiderBehaviorMode.FollowClick)
-        {
-            HandleClicks();
-        }
     }
 
     private void FixedUpdate()
@@ -122,7 +77,6 @@ public class SpiderMovement : MonoBehaviour
         void DoStepForce()
         {
             if (!_movementEnabled) return;
-
             _rb.AddForce(GetAccelForce(_targetStepPosition, _movementSpeed));
             _rb.AddForce(GetBrakeForce(_targetStepPosition));
         }
@@ -160,8 +114,14 @@ public class SpiderMovement : MonoBehaviour
     /// <returns></returns>
     private Vector2 GetBrakeForce(Vector2 brakeTarget)
     {
-        float distance = Vector2.Distance(_rb.position, brakeTarget);
         float velocityMag = _rb.velocity.magnitude;
+
+        if (velocityMag == 0) return Vector2.zero;
+
+        float distance = Vector2.Distance(_rb.position, brakeTarget);
+
+        if (distance == 0) return Vector2.zero;
+
         Vector2 velocity = _rb.velocity;
         float mass = _rb.mass;
 
@@ -173,23 +133,11 @@ public class SpiderMovement : MonoBehaviour
 
     #endregion
 
-    #region input
-
-    private void HandleClicks()
-    {
-        if (Input.GetMouseButtonDown(0))
-        {
-            _lastClickedPosition = Camera.ScreenToWorldPoint(Input.mousePosition);
-        }
-    }
-
-    #endregion
-
     #region checks
 
     private void CheckIfDestinationReached()
     {
-        _hasReachedDestination = Vector2.Distance(_rb.position, DestinationPosition) <= _stoppingDistance; // Needs rework too
+        //_hasReachedDestination = Vector2.Distance(_rb.position, DestinationPosition) <= _stoppingDistance;
     }
 
     #endregion
@@ -198,7 +146,7 @@ public class SpiderMovement : MonoBehaviour
 
     private void HandleStepUpdate()
     {
-        if (_hasReachedDestination) return;
+        if (_hasReachedDestination || _pathfinder.Path == null || _pathfinder.Path.Count <= 1) return;
 
         if (_stepPositionUpdateTimer >= _nextstepPositionUpdate)
         {
@@ -220,11 +168,11 @@ public class SpiderMovement : MonoBehaviour
     private Vector2 GetStepTowardsTarget()
     {
         float randomDeviationAngle = Random.Range(-_deviationRange / 2, _deviationRange / 2);
-        Vector2 baseDirection = (DestinationPosition - (Vector2)transform.position).normalized;
+        Vector2 baseDirection = (_pathfinder.GetNodeAtDistance(1).position - (Vector2)transform.position).normalized;
         Vector2 deviatedDir = Quaternion.AngleAxis(randomDeviationAngle, Vector3.forward) * baseDirection;
 
         float randomMaxDist = Random.Range(Mathf.Max(0, _stepDistance - _stepDistanceRange), _stepDistance + _stepDistanceRange);
-        float stepDistance = Mathf.Min(Vector2.Distance(transform.position, DestinationPosition), randomMaxDist); // Kinda conflicts with the pathfinding system
+        float stepDistance = Mathf.Min(Vector2.Distance(transform.position, DestinationPosition), randomMaxDist);
 
         Vector3 stepPosition = deviatedDir * stepDistance;
 
@@ -237,7 +185,7 @@ public class SpiderMovement : MonoBehaviour
 
     private void MoveRandomLeg()
     {
-        List<Limb> limbs = _limbHandler.Limbs;
+        var limbs = _limbHandler.Limbs;
         int randomLegIndex = Random.Range(0, limbs.Count);
         limbs[randomLegIndex].ForceMove();
     }

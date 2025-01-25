@@ -12,7 +12,9 @@ public class Pathfinder : MonoBehaviour
 
     [SerializeField] private bool _drawGizmos = false;
 
-    List<PathfindingNode> path;
+    public List<PathfindingNode> Path { get; private set; } = new List<PathfindingNode>();
+
+    public PathfindingNode DestinationNode => GetNodeAtDistance(Path.Count - 1);
 
     private void OnEnable()
     {
@@ -26,7 +28,11 @@ public class Pathfinder : MonoBehaviour
 
     private void DoPathfindingUpdate()
     {
-        path = Pathfinding.FindPath(transform.position, _target.position);
+        Path = Pathfinding.FindPath(transform.position, _target.position);
+        if (Path.Count == 0)
+        {
+            Debug.Log("NO PATH");
+        }
     }
 
     /// <summary>
@@ -36,26 +42,27 @@ public class Pathfinder : MonoBehaviour
     /// <returns></returns>
     public PathfindingNode GetNodeAtDistance(int distance)
     {
-        if (path == null || path.Count <= 1) return null;
+        //if (Path == null) return null;
+        //if (distance >= Path.Count) return null;
 
-        return path[distance];
+        return Path[distance];
     }
 
     private void OnDrawGizmos()
     {
         if (!_drawGizmos) return;
 
-        if (path == null) return;
+        if (Path == null) return;
 
         Gizmos.color = Color.white;
 
         Vector3 pointA;
         Vector3 pointB;
         
-        for (int i = 0; i < path.Count - 1; i++)
+        for (int i = 0; i < Path.Count - 1; i++)
         {
-            pointA = path[i].position;
-            pointB = path[i+1].position;
+            pointA = Path[i].position;
+            pointB = Path[i+1].position;
 
             Gizmos.DrawLine(pointA, pointB);
         }

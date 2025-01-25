@@ -8,17 +8,18 @@ public class SpiderHeadController : MonoBehaviour
 
     [SerializeField] private Transform _head;
 
-    private SpiderMovement _spiderMovement;
+    private Pathfinder _pathfinder;
+
     private Vector2? _positionToLookAt = null;
 
     private void Awake()
     {
-        _spiderMovement = GetComponent<SpiderMovement>();
+        _pathfinder = GetComponent<Pathfinder>();
     }
 
     private void Update()
     {
-        SetLookTargetToDestination();
+        UpdateLookTarget();
         
         if (_positionToLookAt != null)
         {
@@ -26,11 +27,11 @@ public class SpiderHeadController : MonoBehaviour
         }
     }
 
-    private void SetLookTargetToDestination()
+    private void UpdateLookTarget()
     {
-        if (_spiderMovement != null)
+        if (_pathfinder != null && _pathfinder.Path.Count > 0)
         {
-            SetLookTarget(_spiderMovement.DestinationPosition);
+            SetLookTarget(_pathfinder.DestinationNode.position);
         }
     }
 
